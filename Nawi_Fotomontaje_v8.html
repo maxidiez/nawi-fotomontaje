@@ -556,16 +556,16 @@ footer {
       <div class="key-app-name">NAWi <span>Piscinas</span></div>
       <div class="key-app-sub">Fotomontaje IA</div>
     </div>
-    <div class="key-title">Ingresá tu API Key de OpenAI</div>
-    <div class="key-sub">Para generar fotomontajes necesitás una API Key de OpenAI. Se guarda en este navegador y no se comparte con nadie.</div>
+    <div class="key-title">Ingresá tu API Key de Replicate</div>
+    <div class="key-sub">Para generar fotomontajes necesitás una API Key de Replicate. Se guarda en este navegador y no se comparte con nadie.</div>
     <div class="key-input-wrap">
-      <input type="password" class="key-input" id="keyInput" placeholder="sk-proj-..." autocomplete="off"
+      <input type="password" class="key-input" id="keyInput" placeholder="r8_..." autocomplete="off"
              onkeydown="if(event.key==='Enter') saveKey()">
       <button class="key-eye" id="keyEye" onclick="toggleKeyVisibility()" tabindex="-1">👁</button>
     </div>
     <button class="btn-key-save" onclick="saveKey()">Guardar y continuar →</button>
     <div class="key-err hidden" id="keyErr"></div>
-    <div class="key-hint">Obtené tu clave en <strong>platform.openai.com</strong></div>
+    <div class="key-hint">Obtené tu clave en <strong>replicate.com/account/api-tokens</strong></div>
   </div>
 </div>
 
@@ -752,17 +752,17 @@ footer {
 
 <script>
 // ─── API KEY ──────────────────────────────────────────────────────────────────
-var OPENAI_KEY = ''
+var REPLICATE_KEY = ''
 var _memKey = '' // fallback en memoria para contextos donde localStorage no está disponible
 
 function storeKey(val) {
   _memKey = val
-  try { localStorage.setItem('nawi_openai_key', val) } catch(e) {}
+  try { localStorage.setItem('nawi_replicate_key', val) } catch(e) {}
 }
 
 function loadKey() {
   if (_memKey) return _memKey
-  try { return localStorage.getItem('nawi_openai_key') || '' } catch(e) { return '' }
+  try { return localStorage.getItem('nawi_replicate_key') || '' } catch(e) { return '' }
 }
 // ─── DATOS REALES NAWI ────────────────────────────────────────────────────────
 var MODELOS = {
@@ -856,7 +856,7 @@ var ST = { b64:null, mime:null, colorPiscina:'celeste', colorLabel:'Celeste', co
 document.addEventListener('DOMContentLoaded', function() {
   var savedKey = loadKey();
   if (savedKey) {
-    OPENAI_KEY = savedKey;
+    REPLICATE_KEY = savedKey;
     document.getElementById('overlayApiKey').classList.add('hidden');
     document.getElementById('btnCambiarClave').classList.remove('hidden');
   }
@@ -905,11 +905,11 @@ function saveKey() {
     errEl.textContent = 'Por favor ingresá tu API Key de OpenAI.';
     errEl.classList.remove('hidden'); return;
   }
-  if (!val.startsWith('sk-')) {
-    errEl.textContent = 'La clave debe comenzar con "sk-". Verificá que sea correcta.';
+  if (!val.startsWith('r8_')) {
+    errEl.textContent = 'La clave de Replicate debe comenzar con "r8_". Verificá en replicate.com/account/api-tokens';
     errEl.classList.remove('hidden'); return;
   }
-  OPENAI_KEY = val;
+  REPLICATE_KEY = val;
   storeKey(val);
   document.getElementById('overlayApiKey').classList.add('hidden');
   document.getElementById('btnCambiarClave').classList.remove('hidden');
@@ -1049,7 +1049,7 @@ async function generate() {
     errEl.textContent = '📷 Por favor subí una foto del terreno antes de continuar.';
     errEl.classList.remove('hidden'); return;
   }
-  if (!OPENAI_KEY) {
+  if (!REPLICATE_KEY) {
     errEl.textContent = '🔑 Configurá tu API Key usando el botón "Cambiar clave" en el encabezado.';
     errEl.classList.remove('hidden'); return;
   }
@@ -1069,51 +1069,10 @@ async function generate() {
   document.getElementById('panelConfig').classList.add('hidden');
   document.getElementById('panelLoad').classList.remove('hidden');
 
-  // ── Paso 0: descargar render cenital + fotos de referencia ──
+  // ── Paso 0: preparar configuración ──
   setPI(0, 'active');
-  var extraImages = [];
-  var renderFile = getRenderFilename(modelo.id, ST.colorPiscina);
-  if (renderFile) {
-    try {
-      extraImages.push(await fetchImageAsBase64(BASE_URL + renderFile));
-    } catch(e) { console.warn('Render no disponible:', e.message); }
-  }
-  try {
-    extraImages.push(await fetchImageAsBase64(BASE_URL + 'WhatsApp_Image_2026-05-30_at_17_47_48.jpeg'));
-  } catch(e) { console.warn('Ref instalación no disponible:', e.message); }
-  try {
-    extraImages.push(await fetchImageAsBase64(BASE_URL + 'WhatsApp_Image_2026-05-30_at_17_47_48__1_.jpeg'));
-  } catch(e) { console.warn('Ref losetas no disponible:', e.message); }
+  await wait(400);
   setPI(0, 'done');
-
-  // ── System prompt: GPT-4o analiza el terreno y adapta el prompt base ──
-  var GPT4O_SYSTEM = [
-    'You are a professional photomontage expert and photo editor.',
-    'You receive: (1) a terrain photo to edit, (2) a pool render for shape reference,',
-    '(3-4) real NAWi installation photos for visual reference, and (5) a draft edit prompt.',
-    '',
-    'Your task: analyze the specific terrain in Image 1 and ADAPT the draft prompt to be',
-    'precise for THIS specific terrain. Pay special attention to:',
-    '',
-    'PERSPECTIVE ANALYSIS (critical):',
-    '- Identify the camera height and viewing angle in the photo (is it eye-level, slightly',
-    '  elevated, low angle?). The pool must be drawn from EXACTLY this same viewpoint.',
-    '- The photo looks like it was taken by a person standing normally — the pool must match',
-    '  this eye-level perspective, NOT look like it is viewed from a drone or high above.',
-    '- Identify the vanishing point(s) and horizon line in the photo. All pool edges and tile',
-    '  lines must converge to the SAME vanishing points as the existing elements in the scene.',
-    '- The pool walls, tile rows, and solarium edges must be perfectly parallel to existing',
-    '  lines in the photo (fences, walls, pavement edges, building lines).',
-    '',
-    'PLACEMENT ANALYSIS:',
-    '- Where exactly does the pool fit in the terrain, centered and aligned with surroundings.',
-    '- How the pool integrates with the ground level — it must appear physically dug in.',
-    '',
-    'Rules:',
-    '- Keep ALL specific instructions from the draft (colors, tile specs, time, rules)',
-    '- Add precise perspective and alignment instructions based on your terrain analysis',
-    '- Return ONLY the adapted prompt, no explanations. Max 1200 characters.',
-  ].join('\n');
 
   var results = [];
 
@@ -1155,6 +1114,14 @@ async function generate() {
   ].concat(linea === 'SUNDECK' ? [
     '',
     'SUNDECK WET SOLARIUM (built-in pool feature — MUST be included): At the entry end of the pool there is a shallow raised fiberglass platform INSIDE the pool itself, approximately ' + modelo.extra.replace('Solarium ','') + ' wide. This is a "wet beach entry" — a shallow shelf that is PART OF THE POOL STRUCTURE, not an external tiled deck. The water here is only 5-10cm deep, making it look like a beach/wading area. It is made of the SAME fiberglass as the pool interior (' + colorInt + ' color). From the camera angle, this end of the pool will appear lighter/shallower with a visible step-down to the deeper section. The wet solarium runs the full width of the pool at the entry end.',
+  ] : []).concat(linea === 'BOREAL' ? [
+    '',
+    'BOREAL POOL DIMENSIONS: ' + modelo.dim.split(' × ')[0] + ' long × ' + modelo.dim.split(' × ')[1] + ' wide (length × width).',
+    '',
+    'BOREAL INTERNAL FEATURES (must be visible in the result):',
+    '- Structural ergonomic bench: 42cm wide, runs along the FULL LENGTH of ONE lateral side inside the pool. This is a raised fiberglass shelf built into the pool wall.',
+    '- Diagonal entry stairs: located in ONE corner only (not centered, not straight — diagonal cut across the corner).',
+    '- The pool has a structural bench 42cm wide running along one full lateral side, and diagonal entry stairs in one corner. These are internal features visible from above.',
   ] : []).concat([
     '',
     'TILES AROUND POOL: One row of 50x50cm granulated athermic tiles (exactly like the reference photo) bordering the complete pool perimeter at ground level. Each tile is exactly 50x50cm - use this as your scale reference for the entire scene.',
@@ -1178,11 +1145,8 @@ async function generate() {
   ]).join('\n');
 
   try {
-    document.querySelector('#pi1 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
-    var editPrompt1 = await analyzeWithGPT4o(GPT4O_SYSTEM, userText1, extraImages);
-    console.log('[generate] ➡ Prompt v1 enviado a gpt-image-1:', editPrompt1);
-    document.querySelector('#pi1 .prog-desc').textContent = 'Generando imagen… (' + editPrompt1.length + ' chars)';
-    var u1 = await generateWithImageEdit(editPrompt1);
+    document.querySelector('#pi1 .prog-desc').textContent = 'Generando con FLUX 1.1 Pro…';
+    var u1 = await callReplicate(userText1);
     results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'Una vuelta de losetas · Luz de tarde 6 PM · 4K', url:u1, err:null });
   } catch(e) {
     results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'', url:null, err:e.message });
@@ -1232,6 +1196,14 @@ async function generate() {
   ].concat(linea === 'SUNDECK' ? [
     '',
     'SUNDECK WET SOLARIUM (built-in pool feature — MUST be included): At the entry end of the pool there is a shallow raised fiberglass platform INSIDE the pool itself, approximately ' + modelo.extra.replace('Solarium ','') + ' wide. This is a "wet beach entry" — a shallow shelf that is PART OF THE POOL STRUCTURE, not a tiled deck. Water is only 5-10cm deep here, creating a wading/beach effect. Same fiberglass color as pool interior (' + colorInt + '). Visually: this end of the pool appears lighter/shallower with a clear step-down to the deeper pool section. It runs the full width of the pool.',
+  ] : []).concat(linea === 'BOREAL' ? [
+    '',
+    'BOREAL POOL DIMENSIONS: ' + modelo.dim.split(' × ')[0] + ' long × ' + modelo.dim.split(' × ')[1] + ' wide (length × width).',
+    '',
+    'BOREAL INTERNAL FEATURES (must be visible in the result):',
+    '- Structural ergonomic bench: 42cm wide, runs along the FULL LENGTH of ONE lateral side inside the pool. This is a raised fiberglass shelf built into the pool wall.',
+    '- Diagonal entry stairs: located in ONE corner only (diagonal cut across the corner, not centered, not straight).',
+    '- The pool has a structural bench 42cm wide running along one full lateral side, and diagonal entry stairs in one corner. These are internal features visible from above.',
   ] : []).concat([
     '',
     linea === 'SUNDECK'
@@ -1262,11 +1234,8 @@ async function generate() {
   ]).join('\n');
 
   try {
-    document.querySelector('#pi2 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
-    var editPrompt2 = await analyzeWithGPT4o(GPT4O_SYSTEM, userText2, extraImages);
-    console.log('[generate] ➡ Prompt v2 enviado a gpt-image-1:', editPrompt2);
-    document.querySelector('#pi2 .prog-desc').textContent = 'Generando imagen… (' + editPrompt2.length + ' chars)';
-    var u2 = await generateWithImageEdit(editPrompt2);
+    document.querySelector('#pi2 .prog-desc').textContent = 'Generando con FLUX 1.1 Pro…';
+    var u2 = await callReplicate(userText2);
     results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'Doble loseta · Solarium 2m · Luces RGB · Atardecer · 4K', url:u2, err:null });
   } catch(e) {
     results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'', url:null, err:e.message });
@@ -1276,125 +1245,99 @@ async function generate() {
   showResults(results, linea, modelo);
 }
 
-// ─── OPENAI PASO 1: ANÁLISIS CON GPT-4o ──────────────────────────────────────
-async function analyzeWithGPT4o(systemPrompt, userText, extraImages) {
-  var imgCount = 1 + (extraImages || []).filter(Boolean).length;
-  console.log('[GPT-4o] Enviando ' + imgCount + ' imágenes (1 terreno + ' + (imgCount - 1) + ' refs)');
-  console.log('[GPT-4o] userText (' + userText.length + ' chars):', userText);
+// ─── REPLICATE: FLUX 1.1 PRO ──────────────────────────────────────────────────
+async function callReplicate(prompt) {
+  console.log('[Replicate] Iniciando con FLUX 1.1 Pro...');
+  console.log('[Replicate] Prompt (' + prompt.length + ' chars):', prompt);
+  console.log('[Replicate] Imagen terreno: mime=' + ST.mime + ', ~' + Math.round(ST.b64.length * 0.75 / 1024) + ' KB');
 
-  var content = [];
-  content.push({
-    type: 'image_url',
-    image_url: { url: 'data:' + ST.mime + ';base64,' + ST.b64, detail: 'high' }
-  });
-  (extraImages || []).forEach(function(img, i) {
-    if (!img || !img.b64) return;
-    console.log('[GPT-4o] Ref imagen ' + i + ': ' + img.mime + ', ~' + Math.round(img.b64.length * 0.75 / 1024) + ' KB');
-    content.push({
-      type: 'image_url',
-      image_url: { url: 'data:' + img.mime + ';base64,' + img.b64, detail: 'high' }
-    });
-  });
-  content.push({ type: 'text', text: userText });
+  var imageDataUrl = 'data:' + ST.mime + ';base64,' + ST.b64;
 
-  var res = await fetch('https://api.openai.com/v1/chat/completions', {
+  // ── Paso 1: crear predicción ──
+  var createRes = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions', {
     method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + OPENAI_KEY, 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': 'Bearer ' + REPLICATE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'wait=5'
+    },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      max_tokens: 1500,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: content }
-      ]
+      input: {
+        prompt: prompt,
+        image: imageDataUrl,
+        prompt_strength: 0.85,
+        aspect_ratio: '1:1',
+        output_format: 'jpg',
+        output_quality: 90,
+        safety_tolerance: 2
+      }
     })
   });
 
-  console.log('[GPT-4o] HTTP status:', res.status);
-  var rawText = await res.text();
-  console.log('[GPT-4o] Respuesta raw:', rawText.substring(0, 800));
+  console.log('[Replicate] Create HTTP status:', createRes.status);
+  var rawCreate = await createRes.text();
+  console.log('[Replicate] Create response:', rawCreate.substring(0, 600));
 
-  var data;
-  try { data = JSON.parse(rawText); } catch(ex) {
-    throw new Error('GPT-4o respuesta inválida: ' + rawText.substring(0, 200));
+  var prediction;
+  try { prediction = JSON.parse(rawCreate); } catch(ex) {
+    throw new Error('Replicate: respuesta inválida — ' + rawCreate.substring(0, 200));
   }
 
-  if (!res.ok) {
-    console.error('[GPT-4o] Error:', data);
-    var msg = (data.error && data.error.message) ? data.error.message : 'Error HTTP ' + res.status;
-    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
-    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
-    throw new Error('GPT-4o ' + res.status + ': ' + msg);
+  if (!createRes.ok) {
+    console.error('[Replicate] Error al crear predicción:', prediction);
+    var msg = prediction.detail || (prediction.error && prediction.error.toString()) || 'Error HTTP ' + createRes.status;
+    if (createRes.status === 401) throw new Error('API Key de Replicate inválida. Verificá en replicate.com/account/api-tokens');
+    if (createRes.status === 402) throw new Error('Sin créditos en Replicate. Verificá tu billing en replicate.com');
+    if (createRes.status === 429) throw new Error('Límite de Replicate alcanzado. Esperá unos segundos e intentá de nuevo.');
+    throw new Error('Replicate ' + createRes.status + ': ' + msg);
   }
 
-  var generatedPrompt = data.choices[0].message.content.trim();
-  console.log('[GPT-4o] ✅ Prompt generado (' + generatedPrompt.length + ' chars):', generatedPrompt);
-  return generatedPrompt;
-}
-
-// ─── OPENAI PASO 2: EDICIÓN CON GPT-IMAGE-1 ──────────────────────────────────
-async function generateWithImageEdit(editPrompt) {
-  console.log('[gpt-image-1] Iniciando edición...');
-  console.log('[gpt-image-1] Prompt completo (' + editPrompt.length + ' chars):', editPrompt);
-  console.log('[gpt-image-1] Imagen terreno: mime=' + ST.mime + ', ~' + Math.round(ST.b64.length * 0.75 / 1024) + ' KB');
-
-  var byteStr = atob(ST.b64);
-  var ab = new ArrayBuffer(byteStr.length);
-  var ia = new Uint8Array(ab);
-  for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
-  var imgBlob = new Blob([ab], { type: ST.mime });
-
-  var fd = new FormData();
-  fd.append('model', 'gpt-image-1');
-  fd.append('prompt', editPrompt);
-  fd.append('n', '1');
-  fd.append('size', '1024x1024');
-  fd.append('quality', 'high');
-  fd.append('image[]', imgBlob, 'terreno.jpg');
-
-  console.log('[FormData] model: gpt-image-1');
-  console.log('[FormData] prompt length:', editPrompt.length);
-  console.log('[FormData] image[]: Blob(type=' + imgBlob.type + ', size=' + Math.round(imgBlob.size / 1024) + ' KB, filename=terreno.jpg)');
-
-  var res = await fetch('https://api.openai.com/v1/images/edits', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + OPENAI_KEY },
-    body: fd
-  });
-
-  console.log('[gpt-image-1] HTTP status:', res.status);
-  var rawText = await res.text();
-  console.log('[gpt-image-1] Respuesta raw (500 chars):', rawText.substring(0, 500));
-
-  var data;
-  try { data = JSON.parse(rawText); } catch(ex) {
-    throw new Error('gpt-image-1 respuesta inválida: ' + rawText.substring(0, 300));
+  // Si Prefer:wait respondió ya terminado
+  if (prediction.status === 'succeeded') {
+    var out = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+    console.log('[Replicate] ✅ Completado en modo sync:', out);
+    return out;
   }
 
-  if (!res.ok) {
-    console.error('[gpt-image-1] Error completo:', data);
-    var msg = (data.error && data.error.message) ? data.error.message : 'Error HTTP ' + res.status;
-    var code = data.error && data.error.code ? ' [' + data.error.code + ']' : '';
-    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
-    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
-    throw new Error('gpt-image-1 ' + res.status + code + ': ' + msg);
+  if (prediction.status === 'failed' || prediction.status === 'canceled') {
+    throw new Error('Replicate: generación fallida — ' + (prediction.error || prediction.status));
   }
 
-  console.log('[gpt-image-1] ✅ Respuesta OK. Estructura data.data:', JSON.stringify(data.data ? data.data[0] : data).substring(0, 200));
+  // ── Paso 2: polling cada 3 segundos ──
+  var statusUrl = prediction.urls && prediction.urls.get;
+  if (!statusUrl) throw new Error('Replicate: no se recibió URL de status en la respuesta');
 
-  if (data.data && data.data[0]) {
-    if (data.data[0].url) {
-      console.log('[gpt-image-1] Imagen como URL');
-      return data.data[0].url;
+  console.log('[Replicate] Polling:', statusUrl);
+
+  for (var attempt = 0; attempt < 40; attempt++) {
+    await wait(3000);
+
+    var pollRes = await fetch(statusUrl, {
+      headers: { 'Authorization': 'Bearer ' + REPLICATE_KEY }
+    });
+    var pollRaw = await pollRes.text();
+    var poll;
+    try { poll = JSON.parse(pollRaw); } catch(ex) {
+      throw new Error('Replicate: respuesta de polling inválida');
     }
-    if (data.data[0].b64_json) {
-      console.log('[gpt-image-1] Imagen como b64_json (' + data.data[0].b64_json.length + ' chars)');
-      return 'data:image/png;base64,' + data.data[0].b64_json;
+
+    console.log('[Replicate] Poll #' + (attempt + 1) + ' — status: ' + poll.status);
+
+    if (poll.status === 'succeeded') {
+      var outputUrl = Array.isArray(poll.output) ? poll.output[0] : poll.output;
+      console.log('[Replicate] ✅ Imagen generada:', outputUrl);
+      return outputUrl;
     }
-    throw new Error('gpt-image-1: respuesta sin url ni b64_json. Keys: ' + Object.keys(data.data[0]).join(', '));
+
+    if (poll.status === 'failed' || poll.status === 'canceled') {
+      console.error('[Replicate] Fallo:', poll.error);
+      throw new Error('Replicate: generación fallida — ' + (poll.error || poll.status));
+    }
+
+    // 'starting' | 'processing' → seguir esperando
   }
 
-  throw new Error('gpt-image-1: respuesta inesperada — ' + JSON.stringify(data).substring(0, 300));
+  throw new Error('Replicate: timeout — la imagen tardó más de 2 minutos en generarse.');
 }
 
 // ─── SHOW RESULTS ─────────────────────────────────────────────────────────────
