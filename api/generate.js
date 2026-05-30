@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+  export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { prompt, imageBase64, mimeType } = req.body;
@@ -30,7 +30,9 @@ export default async function handler(req, res) {
     if (!response.ok) return res.status(response.status).json({ error: prediction.detail || 'Replicate error' });
 
     if (prediction.status === 'succeeded') {
-      return res.status(200).json(await urlToBase64Response(prediction.output[0] || prediction.output));
+      console.log('[generate] output (sync):', JSON.stringify(prediction.output));
+      const url = extractUrl(prediction.output);
+      return res.status(200).json(await urlToBase64Response(url));
     }
 
     // Polling
@@ -41,7 +43,11 @@ export default async function handler(req, res) {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await poll.json();
-      if (data.status === 'succeeded') return res.status(200).json(await urlToBase64Response(data.output[0] || data.output));
+      if (data.status === 'succeeded') {
+        console.log('[generate] output (poll #' + (i + 1) + '):', JSON.stringify(data.output));
+        const url = extractUrl(data.output);
+        return res.status(200).json(await urlToBase64Response(url));
+      }
       if (data.status === 'failed') return res.status(500).json({ error: data.error || 'Generation failed' });
     }
 
@@ -51,10 +57,19 @@ export default async function handler(req, res) {
   }
 }
 
+function extractUrl(output) {
+  if (Array.isArray(output)) return output[0];
+  if (typeof output === 'string') return output;
+  throw new Error('Formato de output inesperado: ' + JSON.stringify(output));
+}
+
 async function urlToBase64Response(url) {
+  console.log('[generate] Descargando imagen:', url);
   const imgRes = await fetch(url);
+  if (!imgRes.ok) throw new Error('No se pudo descargar la imagen: HTTP ' + imgRes.status + ' — ' + url);
   const mimeType = imgRes.headers.get('content-type') || 'image/webp';
   const buffer = await imgRes.arrayBuffer();
   const imageBase64 = Buffer.from(buffer).toString('base64');
+  console.log('[generate] Imagen convertida: ' + mimeType + ', ' + Math.round(buffer.byteLength / 1024) + ' KB');
   return { imageBase64, mimeType };
 }
