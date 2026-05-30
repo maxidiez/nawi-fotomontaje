@@ -1075,49 +1075,64 @@ async function generate() {
   } catch(e) { console.warn('Ref losetas no disponible:', e.message); }
   setPI(0, 'done');
 
-  // ── System prompt compartido para GPT-4o ──
+  // ── System prompt: GPT-4o analiza el terreno y adapta el prompt base ──
   var GPT4O_SYSTEM = [
-    'Sos un experto en fotomontaje arquitectónico fotorrealista.',
-    'Tu tarea: analizar las imágenes que recibís y generar un prompt técnico preciso en español',
-    'para que un modelo de edición de imágenes inserte una piscina de forma 100% fotorrealista.',
+    'You are a professional photomontage expert and photo editor.',
+    'You receive: (1) a terrain photo to edit, (2) a pool render for shape reference,',
+    '(3-4) real NAWi installation photos for visual reference, and (5) a draft edit prompt.',
     '',
-    'Imágenes que recibís:',
-    '- Imagen 1: foto real del terreno a editar (ES la imagen que se va a modificar)',
-    '- Imagen 2 (si existe): render cenital del modelo — referencia EXACTA de forma y proporciones',
-    '- Imagen 3 (si existe): foto real de instalación NAWi terminada — referencia del aspecto final',
-    '- Imagen 4 (si existe): detalle losetas atérmicas 50×50cm — referencia de textura y acabado',
+    'Your task: analyze the specific terrain in Image 1 and ADAPT the draft prompt to be',
+    'precise for THIS specific terrain. Pay special attention to:',
     '',
-    'Generá UN prompt de edición en español, máximo 1000 caracteres, técnico y preciso.',
-    'Incluí: posición exacta de la piscina respetando perspectiva y ángulo original,',
-    'integración con el entorno (sombras, reflejos, iluminación coherente),',
-    'materiales exactos (losetas atérmicas 50×50cm textura granulada, bordes rectos sin curvas),',
-    'color y aspecto del agua.',
-    'Respondé SOLO con el prompt, sin explicaciones ni comentarios.',
+    'PERSPECTIVE ANALYSIS (critical):',
+    '- Identify the camera height and viewing angle in the photo (is it eye-level, slightly',
+    '  elevated, low angle?). The pool must be drawn from EXACTLY this same viewpoint.',
+    '- The photo looks like it was taken by a person standing normally — the pool must match',
+    '  this eye-level perspective, NOT look like it is viewed from a drone or high above.',
+    '- Identify the vanishing point(s) and horizon line in the photo. All pool edges and tile',
+    '  lines must converge to the SAME vanishing points as the existing elements in the scene.',
+    '- The pool walls, tile rows, and solarium edges must be perfectly parallel to existing',
+    '  lines in the photo (fences, walls, pavement edges, building lines).',
+    '',
+    'PLACEMENT ANALYSIS:',
+    '- Where exactly does the pool fit in the terrain, centered and aligned with surroundings.',
+    '- How the pool integrates with the ground level — it must appear physically dug in.',
+    '',
+    'Rules:',
+    '- Keep ALL specific instructions from the draft (colors, tile specs, time, rules)',
+    '- Add precise perspective and alignment instructions based on your terrain analysis',
+    '- Return ONLY the adapted prompt, no explanations. Max 1200 characters.',
   ].join('\n');
-
-  var modeloCtx = [
-    'Modelo: ' + modelo.label + ' | Dimensiones: ' + modelo.dim + ' | Prof: ' + modelo.prof,
-    'Color interior: ' + colorInt + ' | Agua: ' + colorAgua,
-    'Orientación: ' + orientTxt,
-    'Características: ' + modelo.extra,
-  ].join('\n');
-
-  var losetasBase = 'Losetas atérmicas exactamente 50×50cm con textura granulada. Bordes de la piscina completamente rectos, sin curvas ni redondeos. La vuelta de losetas rodea todo el perímetro al ras del suelo.';
 
   var results = [];
 
   // ── Versión 1: Básica ──
   setPI(1, 'active');
   var userText1 = [
-    modeloCtx,
+    'You are a professional photo editor specializing in pool installations. Edit the FIRST image (the terrain photo) to add a fiberglass swimming pool.',
     '',
-    'VERSIÓN: BÁSICA',
-    '- UNA vuelta de losetas atérmicas blancas bordeando todo el perímetro al ras del suelo.',
-    '- ' + losetasBase,
-    '- Hora: 18:00 hs — luz dorada de tarde, cielo cálido con tonos anaranjados.',
-    '- Agua cristalina con reflejos dorados del sol de tarde.',
-    '- Entorno mejorado: césped prolijo, zona limpia, plantas decorativas discretas (palmeras bajas, agapantos).',
-    '- Fotorrealismo 4K, perspectiva y ángulo original sin ningún cambio.',
+    'POOL SHAPE: Rectangular with perfectly straight corners, NO curves or rounded edges. Exact proportions from the reference render (second image).',
+    '',
+    'POOL COLOR: Interior fiber color is ' + colorInt + '. Water appears ' + colorAgua + ' and crystalline.',
+    '',
+    'TILES AROUND POOL: One row of 50x50cm granulated athermic tiles (exactly like the reference photo) bordering the complete pool perimeter at ground level. Each tile is exactly 50x50cm - use this as your scale reference for the entire scene.',
+    '',
+    'POOL DIMENSIONS: ' + modelo.dim + ' - use the tile size (50x50cm each) to calculate correct pool proportions in the photo perspective.',
+    '',
+    'TIME: 6:00 PM golden hour light, warm sun from the side, long shadows.',
+    '',
+    'PERSPECTIVE & ALIGNMENT RULES (critical):',
+    '- The photo was taken at normal standing eye-level height — the pool MUST match this exact viewpoint. It must NOT look like an aerial/drone view or top-down perspective.',
+    '- Identify the vanishing points in the original photo. All pool edges, tile lines, and solarium borders must converge to the SAME vanishing points as existing elements (walls, fences, ground lines).',
+    '- Pool sides must be perfectly parallel/aligned with the main lines of the environment visible in the photo.',
+    '- Pool must appear centered and naturally placed within the available space.',
+    '',
+    'RULES:',
+    '- Keep EXACT camera angle and perspective from the original terrain photo',
+    '- Pool must look physically dug into the ground, not floating',
+    '- Straight rectangular shape, zero curves',
+    '- Photo-realistic result, NOT a 3D render',
+    '- Natural shadows consistent with 6PM light',
   ].join('\n');
 
   try {
@@ -1135,17 +1150,35 @@ async function generate() {
   // ── Versión 2: Full Experience ──
   setPI(2, 'active');
   var userText2 = [
-    modeloCtx,
+    'You are a professional photo editor specializing in pool installations. Edit the FIRST image (the terrain photo) to add a premium fiberglass swimming pool.',
     '',
-    'VERSIÓN: FULL EXPERIENCE PREMIUM',
-    '- DOS vueltas de losetas cerámicas premium alrededor de todo el perímetro.',
-    '- ' + losetasBase,
-    '- Solarium: plataforma de losetas 2m de largo en la puntera de la piscina, al ras del suelo.',
-    '- Iluminación subacuática: DOS luces LED RGB en la pared lateral, haz turquesa brillante visible en el agua.',
-    '- Hora: atardecer 19:15 hs — cielo con degradado naranja y rosa.',
-    '- El agua refleja simultáneamente el atardecer naranja y la luz turquesa interior.',
-    '- Decoración premium: palmeras pequeñas, agapantos en flor, iluminación LED de jardín, macetas de diseño.',
-    '- Fotorrealismo 4K como portada de revista de arquitectura premium, perspectiva original sin cambios.',
+    'POOL SHAPE: Rectangular with perfectly straight corners, NO curves. Exact proportions from reference render (second image).',
+    '',
+    'POOL COLOR: Interior fiber color is ' + colorInt + '. Water appears ' + colorAgua + ' and crystalline.',
+    '',
+    'SOLARIUM: At the ENTRY END of the pool (where the stairs are), add a raised platform made of 4 rows of 50x50cm tiles. Each row is one tile deep (50cm), so 4 rows = exactly 2 meters total depth. The solarium is the same width as the pool. It sits flush with the ground level, made of the same granulated athermic tiles as the pool border.',
+    '',
+    'TILES: Two rows of 50x50cm granulated athermic tiles around the complete pool perimeter. Each tile is exactly 50x50cm.',
+    '',
+    'UNDERWATER LIGHTS: Exactly TWO RGB LED lights installed on ONE lateral wall only (choose left OR right side based on photo perspective, never both sides). Lights emit turquoise/cyan color visible in the water.',
+    '',
+    'TIME: Sunset 7:15 PM, sky with orange and pink gradient on horizon. Magical warm light.',
+    '',
+    'DECORATION: Premium ornamental plants around pool area. Elegant garden lighting. Luxury villa aesthetic.',
+    '',
+    'PERSPECTIVE & ALIGNMENT RULES (critical):',
+    '- The photo was taken at normal standing eye-level height — the pool MUST match this exact viewpoint. It must NOT look like an aerial/drone view or top-down perspective.',
+    '- Identify the vanishing points in the original photo. All pool edges, tile lines, solarium borders, and light positions must converge to the SAME vanishing points as existing elements in the scene.',
+    '- Pool sides must be perfectly parallel/aligned with the main structural lines of the environment (walls, fences, pavement, building edges).',
+    '- Pool must appear centered and naturally placed within the available space, not skewed or floating.',
+    '',
+    'RULES:',
+    '- Keep EXACT camera angle and perspective from original terrain photo',
+    '- Pool physically dug into ground',
+    '- Straight rectangular shape, zero curves',
+    '- Solarium MUST be at entry end, 4 tile rows deep = 2 meters',
+    '- TWO lights on ONE side only',
+    '- Photo-realistic, NOT 3D render',
   ].join('\n');
 
   try {
