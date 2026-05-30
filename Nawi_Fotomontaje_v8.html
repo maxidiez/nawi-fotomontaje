@@ -713,7 +713,7 @@ footer {
           <div class="prog-dot" id="pd0">⚙</div>
           <div>
             <div class="prog-name">Preparando configuración</div>
-            <div class="prog-desc">Modelo, dimensiones y color seleccionados</div>
+            <div class="prog-desc">Descargando render del modelo y fotos de referencia</div>
           </div>
         </div>
         <div class="prog-item" id="pi1">
@@ -798,6 +798,45 @@ var COLORES = {
     { id:'beige',   label:'Beige',   hex:'#d4b896', agua:'Turquesa cristalino' },
     { id:'gris',    label:'Gris',    hex:'#9fb3c0', agua:'Turquesa cristalino' },
   ]
+};
+
+// ─── GITHUB BASE URL ──────────────────────────────────────────────────────────
+var BASE_URL = 'https://maxidiez.github.io/nawi-fotomontaje/';
+
+// ─── RENDERS CENITALES POR MODELO + COLOR ────────────────────────────────────
+var RENDERS = {
+  // SUNDECK
+  'SD400_celeste': 'sundeck400_Cenital.webp',
+  'SD400_beige':   'SUNDECK2CK400_Cenital_Beige.webp',
+  'SD500_celeste': 'sundeck500_Cenital.webp',
+  'SD500_beige':   'SUNDECK2CK500_Perfil_Beige.webp',
+  'SD600_celeste': 'sundeck600_Cenital.webp',
+  'SD600_beige':   'SUNDECK2CK600_Cenital_Beige.webp',
+  'SD700_celeste': 'sundeck700_Cenital.webp',
+  'SD700_beige':   'SUNDECK2CK700_Cenital_Beige.webp',
+  'SD750_celeste': 'sundeck750_Cenital.webp',
+  'SD750_beige':   'SUNDECK2CK750_Cenital_Beige.webp',
+  // BOREAL
+  'BOR400_celeste': 'BOREAL_4M_Cenital_Celeste.png',
+  'BOR400_beige':   'BOREAL_4M_Cenital_Beige.png',
+  'BOR500_celeste': 'BOREAL_5M_Cenital_Celeste.png',
+  'BOR500_beige':   'BOREAL_5M_Cenital_Beige.png',
+  'BOR600_celeste': 'BOREAL_6M_Cenital_Celeste.png',
+  'BOR600_beige':   'BOREAL_6M_Cenital_Beige.png',
+  // MIRAGE
+  'MIR600_celeste': 'Mirage_700_Celeste_-_Cenital_-base.png',
+  'MIR700_celeste': 'Mirage_700_Celeste_-_Cenital_-base.png',
+  'MIR800_beige':   'Mirage_800_Beige_-_Cenital_-base.png',
+  // ELITE
+  'ELT260_blanco': 'Elit350_Cenital_Beige.png',
+  'ELT260_beige':  'Elit350_Cenital_Beige.png',
+  'ELT260_gris':   'Elit350_Cenital_Beige.png',
+  'ELT340_blanco': 'Elit350_Cenital_Beige.png',
+  'ELT340_beige':  'Elit350_Cenital_Beige.png',
+  'ELT340_gris':   'Elit350_Cenital_Beige.png',
+  'ELT420_blanco': 'Elite420_Cenital_Beige.png',
+  'ELT420_beige':  'Elite420_Cenital_Beige.png',
+  'ELT420_gris':   'Elite420_Cenital_Beige.png',
 };
 
 var ST = { b64:null, mime:null, colorPiscina:'celeste', colorLabel:'Celeste', colorAgua:'Celeste turquesa', orient:'horizontal', lineaActual:'SUNDECK', modeloActual:null };
@@ -970,6 +1009,27 @@ function setPI(idx, state) {
   if (state === 'done') dot.textContent = '✓';
 }
 
+// ─── RENDER / REFERENCIA HELPERS ─────────────────────────────────────────────
+function getRenderFilename(modeloId, colorId) {
+  return RENDERS[modeloId + '_' + colorId] || null;
+}
+
+async function fetchImageAsBase64(url) {
+  var res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' al descargar ' + url);
+  var blob = await res.blob();
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      var parts = reader.result.split(',');
+      var mime = parts[0].split(':')[1].split(';')[0];
+      resolve({ b64: parts[1], mime: mime });
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 // ─── GENERATE ─────────────────────────────────────────────────────────────────
 async function generate() {
   var errEl = document.getElementById('errMain');
@@ -983,45 +1043,66 @@ async function generate() {
     errEl.classList.remove('hidden'); return;
   }
 
-  var linea   = ST.lineaActual;
-  var modelo  = getModeloActual();
-  var colorInt= ST.colorLabel;
+  var linea     = ST.lineaActual;
+  var modelo    = getModeloActual();
+  var colorInt  = ST.colorLabel;
   var colorAgua = ST.colorAgua;
   var orientTxt = ST.orient === 'horizontal'
     ? 'orientada horizontalmente (el eje largo va de izquierda a derecha en la imagen)'
     : 'orientada verticalmente (el eje largo va de adelante hacia atrás, en profundidad)';
 
-  // Steps update
   document.getElementById('sn1').className='step-num done'; document.getElementById('sn1').textContent='✓';
   document.getElementById('sl1').className='step-line done';
   document.getElementById('sn2').className='step-num active';
   document.getElementById('st2').className='step-txt active';
-
   document.getElementById('panelConfig').classList.add('hidden');
   document.getElementById('panelLoad').classList.remove('hidden');
 
-  setPI(0,'active'); await wait(700); setPI(0,'done');
+  // ── Paso 0: descargar render cenital + fotos de referencia ──
+  setPI(0, 'active');
+  var extraImages = [];
+  var renderFile = getRenderFilename(modelo.id, ST.colorPiscina);
+  if (renderFile) {
+    try {
+      extraImages.push(await fetchImageAsBase64(BASE_URL + renderFile));
+    } catch(e) { console.warn('Render no disponible:', e.message); }
+  }
+  try {
+    extraImages.push(await fetchImageAsBase64(BASE_URL + 'WhatsApp_Image_2026-05-30_at_17_47_48.jpeg'));
+  } catch(e) { console.warn('Ref instalación no disponible:', e.message); }
+  try {
+    extraImages.push(await fetchImageAsBase64(BASE_URL + 'WhatsApp_Image_2026-05-30_at_17_47_48__1_.jpeg'));
+  } catch(e) { console.warn('Ref losetas no disponible:', e.message); }
+  setPI(0, 'done');
+
+  var losetasDesc = 'Las losetas son atérmicas de exactamente 50x50cm con textura granulada como se ve en las fotos de referencia. Los bordes de la piscina son completamente rectos, sin curvas ni redondeos. La vuelta de losetas rodea todo el perímetro de la piscina al ras del suelo.';
+
+  var refCtx = extraImages.length > 0
+    ? 'Se adjuntan imágenes de referencia: render cenital del modelo (forma y proporciones exactas) y fotos reales de instalación NAWi (aspecto final con losetas). Usarlas como guía visual precisa.'
+    : '';
 
   var base = [
     'Piscina de fibra de vidrio NAWi Piscinas, fabricada en PRFV de alta calidad.',
-    'Línea '+linea+', modelo '+modelo.label+'.',
-    'Dimensiones: '+modelo.dim+'.', 
-    'Profundidad: '+modelo.prof+'.',
-    'Color interior de la fibra de vidrio: '+colorInt+'.',
-    modelo.extra+'.',
-    'Color del agua: '+colorAgua+'.',
-    'Posición en el terreno: '+orientTxt+'.',
+    'Línea ' + linea + ', modelo ' + modelo.label + '.',
+    'Dimensiones: ' + modelo.dim + '.',
+    'Profundidad: ' + modelo.prof + '.',
+    'Color interior de la fibra de vidrio: ' + colorInt + '.',
+    modelo.extra + '.',
+    'Color del agua: ' + colorAgua + '.',
+    'Posición en el terreno: ' + orientTxt + '.',
   ].join(' ');
 
   var results = [];
 
-  // VERSION 1 — BÁSICA
-  setPI(1,'active');
+  // ── Versión 1: Básica ──
+  setPI(1, 'active');
   var p1 = [
-    'Fotomontaje hiperrealista 4K. Integrar digitalmente una piscina de fibra de vidrio en el terreno de la foto adjunta.',
+    'Fotomontaje hiperrealista 4K. Integrar digitalmente una piscina de fibra de vidrio en el terreno de la PRIMERA imagen adjunta (foto del terreno real).',
+    refCtx,
     base,
     'VERSIÓN BÁSICA — ESPECIFICACIONES:',
     '- Terminación exterior: exactamente UNA vuelta de losetas cerámicas atérmicas blancas bordeando el perímetro completo de la piscina al ras del suelo.',
+    '- ' + losetasDesc,
     '- Hora: 18:00 hs, luz dorada de tarde, cielo cálido con tonos anaranjados suaves en el horizonte.',
     '- El agua se ve cristalina con reflejos dorados del sol de tarde.',
     '- El entorno inmediato está mejorado: césped prolijo y verde, zona limpia y ordenada.',
@@ -1035,21 +1116,23 @@ async function generate() {
   ].join(' ');
 
   try {
-    var u1 = await callOpenAI(p1);
+    var u1 = await callOpenAI(p1, extraImages);
     results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'Una vuelta de losetas · Luz de tarde 6 PM · Foto profesional 4K', url:u1, err:null });
   } catch(e) {
     results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'', url:null, err:e.message });
   }
-  setPI(1,'done');
+  setPI(1, 'done');
   await wait(2000);
 
-  // VERSION 2 — FULL EXPERIENCE
-  setPI(2,'active');
+  // ── Versión 2: Full Experience ──
+  setPI(2, 'active');
   var p2 = [
-    'Fotomontaje hiperrealista 4K de máxima calidad. Integrar digitalmente una piscina de fibra de vidrio con terminaciones premium en el terreno de la foto adjunta.',
+    'Fotomontaje hiperrealista 4K de máxima calidad. Integrar digitalmente una piscina de fibra de vidrio con terminaciones premium en el terreno de la PRIMERA imagen adjunta (foto del terreno real).',
+    refCtx,
     base,
     'VERSIÓN FULL EXPERIENCE — ESPECIFICACIONES:',
     '- Terminación exterior: DOS vueltas de losetas cerámicas premium alrededor de todo el perímetro de la piscina.',
+    '- ' + losetasDesc,
     '- Solarium: plataforma al ras del suelo hecha de losetas cerámicas, de 2 metros de largo, ubicada en la puntera de la piscina (el extremo por donde se ingresa al agua). Es amplia, prolija y está bien integrada al terreno.',
     '- Iluminación subacuática: EXACTAMENTE DOS luces LED RGB instaladas en la pared lateral de la piscina (elegir el lado más natural según la perspectiva de la foto). Las luces emiten un haz de luz turquesa brillante que se refleja y se ve en el agua cristalina.',
     '- Hora: atardecer 19:15 hs, cielo con degradado de naranja y rosa en el horizonte, tonos mágicos y cálidos.',
@@ -1064,23 +1147,23 @@ async function generate() {
   ].join(' ');
 
   try {
-    var u2 = await callOpenAI(p2);
+    var u2 = await callOpenAI(p2, extraImages);
     results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'Doble loseta · Solarium 2m · Luces RGB turquesa · Atardecer · 4K', url:u2, err:null });
   } catch(e) {
     results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'', url:null, err:e.message });
   }
-  setPI(2,'done');
+  setPI(2, 'done');
 
   showResults(results, linea, modelo);
 }
 
 // ─── OPENAI ───────────────────────────────────────────────────────────────────
-async function callOpenAI(prompt) {
+async function callOpenAI(prompt, extraImages) {
+  // Imagen 1: foto del terreno (usuario)
   var byteStr = atob(ST.b64);
   var ab = new ArrayBuffer(byteStr.length);
   var ia = new Uint8Array(ab);
   for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
-  var blob = new Blob([ab], { type: ST.mime });
 
   var fd = new FormData();
   fd.append('model', 'gpt-image-1');
@@ -1088,7 +1171,20 @@ async function callOpenAI(prompt) {
   fd.append('n', '1');
   fd.append('size', '1024x1024');
   fd.append('quality', 'high');
-  fd.append('image[]', blob, 'terreno.jpg');
+  fd.append('image[]', new Blob([ab], { type: ST.mime }), 'terreno.jpg');
+
+  // Imágenes adicionales: render cenital + fotos de referencia
+  if (extraImages && extraImages.length) {
+    extraImages.forEach(function(img, idx) {
+      if (!img || !img.b64) return;
+      var bytes = atob(img.b64);
+      var buf = new ArrayBuffer(bytes.length);
+      var arr = new Uint8Array(buf);
+      for (var j = 0; j < bytes.length; j++) arr[j] = bytes.charCodeAt(j);
+      var ext = (img.mime || 'image/jpeg').split('/')[1].split('+')[0] || 'jpg';
+      fd.append('image[]', new Blob([buf], { type: img.mime }), 'ref' + idx + '.' + ext);
+    });
+  }
 
   var res = await fetch('https://api.openai.com/v1/images/edits', {
     method: 'POST',
