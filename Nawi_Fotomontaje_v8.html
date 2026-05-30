@@ -753,6 +753,17 @@ footer {
 <script>
 // ─── API KEY ──────────────────────────────────────────────────────────────────
 var OPENAI_KEY = ''
+var _memKey = '' // fallback en memoria para contextos donde localStorage no está disponible
+
+function storeKey(val) {
+  _memKey = val
+  try { localStorage.setItem('nawi_openai_key', val) } catch(e) {}
+}
+
+function loadKey() {
+  if (_memKey) return _memKey
+  try { return localStorage.getItem('nawi_openai_key') || '' } catch(e) { return '' }
+}
 // ─── DATOS REALES NAWI ────────────────────────────────────────────────────────
 var MODELOS = {
   'SUNDECK': [
@@ -843,7 +854,7 @@ var ST = { b64:null, mime:null, colorPiscina:'celeste', colorLabel:'Celeste', co
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  var savedKey = localStorage.getItem('nawi_openai_key');
+  var savedKey = loadKey();
   if (savedKey) {
     OPENAI_KEY = savedKey;
     document.getElementById('overlayApiKey').classList.add('hidden');
@@ -899,7 +910,7 @@ function saveKey() {
     errEl.classList.remove('hidden'); return;
   }
   OPENAI_KEY = val;
-  localStorage.setItem('nawi_openai_key', val);
+  storeKey(val);
   document.getElementById('overlayApiKey').classList.add('hidden');
   document.getElementById('btnCambiarClave').classList.remove('hidden');
   errEl.classList.add('hidden');
@@ -1164,7 +1175,7 @@ async function generate() {
     '- Straight rectangular shape, zero curves',
     '- Photo-realistic result, NOT a 3D render',
     '- Natural shadows consistent with 6PM light',
-  ].join('\n');
+  ]).join('\n');
 
   try {
     document.querySelector('#pi1 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
@@ -1247,7 +1258,7 @@ async function generate() {
     '- Entry side: 4 tile rows (solarium) = 2m. Other 3 sides: 1 tile row = 50cm border each',
     '- TWO lights on ONE side only',
     '- Photo-realistic, NOT 3D render',
-  ].join('\n');
+  ]).join('\n');
 
   try {
     document.querySelector('#pi2 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
