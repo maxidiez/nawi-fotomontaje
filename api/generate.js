@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     if (!response.ok) return res.status(response.status).json({ error: prediction.detail || 'Replicate error' });
 
     if (prediction.status === 'succeeded') {
-      return res.status(200).json({ imageUrl: prediction.output[0] || prediction.output });
+      return res.status(200).json(await urlToBase64Response(prediction.output[0] || prediction.output));
     }
 
     // Polling
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await poll.json();
-      if (data.status === 'succeeded') return res.status(200).json({ imageUrl: data.output[0] || data.output });
+      if (data.status === 'succeeded') return res.status(200).json(await urlToBase64Response(data.output[0] || data.output));
       if (data.status === 'failed') return res.status(500).json({ error: data.error || 'Generation failed' });
     }
 
@@ -49,4 +49,12 @@ export default async function handler(req, res) {
   } catch(e) {
     return res.status(500).json({ error: e.message });
   }
+}
+
+async function urlToBase64Response(url) {
+  const imgRes = await fetch(url);
+  const mimeType = imgRes.headers.get('content-type') || 'image/webp';
+  const buffer = await imgRes.arrayBuffer();
+  const imageBase64 = Buffer.from(buffer).toString('base64');
+  return { imageBase64, mimeType };
 }
