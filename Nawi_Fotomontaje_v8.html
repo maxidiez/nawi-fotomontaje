@@ -1075,80 +1075,85 @@ async function generate() {
   } catch(e) { console.warn('Ref losetas no disponible:', e.message); }
   setPI(0, 'done');
 
-  var losetasDesc = 'Las losetas son atérmicas de exactamente 50x50cm con textura granulada como se ve en las fotos de referencia. Los bordes de la piscina son completamente rectos, sin curvas ni redondeos. La vuelta de losetas rodea todo el perímetro de la piscina al ras del suelo.';
+  // ── System prompt compartido para GPT-4o ──
+  var GPT4O_SYSTEM = [
+    'Sos un experto en fotomontaje arquitectónico fotorrealista.',
+    'Tu tarea: analizar las imágenes que recibís y generar un prompt técnico preciso en español',
+    'para que un modelo de edición de imágenes inserte una piscina de forma 100% fotorrealista.',
+    '',
+    'Imágenes que recibís:',
+    '- Imagen 1: foto real del terreno a editar (ES la imagen que se va a modificar)',
+    '- Imagen 2 (si existe): render cenital del modelo — referencia EXACTA de forma y proporciones',
+    '- Imagen 3 (si existe): foto real de instalación NAWi terminada — referencia del aspecto final',
+    '- Imagen 4 (si existe): detalle losetas atérmicas 50×50cm — referencia de textura y acabado',
+    '',
+    'Generá UN prompt de edición en español, máximo 1000 caracteres, técnico y preciso.',
+    'Incluí: posición exacta de la piscina respetando perspectiva y ángulo original,',
+    'integración con el entorno (sombras, reflejos, iluminación coherente),',
+    'materiales exactos (losetas atérmicas 50×50cm textura granulada, bordes rectos sin curvas),',
+    'color y aspecto del agua.',
+    'Respondé SOLO con el prompt, sin explicaciones ni comentarios.',
+  ].join('\n');
 
-  var refCtx = extraImages.length > 0
-    ? 'Se adjuntan imágenes de referencia: render cenital del modelo (forma y proporciones exactas) y fotos reales de instalación NAWi (aspecto final con losetas). Usarlas como guía visual precisa.'
-    : '';
+  var modeloCtx = [
+    'Modelo: ' + modelo.label + ' | Dimensiones: ' + modelo.dim + ' | Prof: ' + modelo.prof,
+    'Color interior: ' + colorInt + ' | Agua: ' + colorAgua,
+    'Orientación: ' + orientTxt,
+    'Características: ' + modelo.extra,
+  ].join('\n');
 
-  var base = [
-    'Piscina de fibra de vidrio NAWi Piscinas, fabricada en PRFV de alta calidad.',
-    'Línea ' + linea + ', modelo ' + modelo.label + '.',
-    'Dimensiones: ' + modelo.dim + '.',
-    'Profundidad: ' + modelo.prof + '.',
-    'Color interior de la fibra de vidrio: ' + colorInt + '.',
-    modelo.extra + '.',
-    'Color del agua: ' + colorAgua + '.',
-    'Posición en el terreno: ' + orientTxt + '.',
-  ].join(' ');
+  var losetasBase = 'Losetas atérmicas exactamente 50×50cm con textura granulada. Bordes de la piscina completamente rectos, sin curvas ni redondeos. La vuelta de losetas rodea todo el perímetro al ras del suelo.';
 
   var results = [];
 
   // ── Versión 1: Básica ──
   setPI(1, 'active');
-  var p1 = [
-    'Fotomontaje hiperrealista 4K. Integrar digitalmente una piscina de fibra de vidrio en el terreno de la PRIMERA imagen adjunta (foto del terreno real).',
-    refCtx,
-    base,
-    'VERSIÓN BÁSICA — ESPECIFICACIONES:',
-    '- Terminación exterior: exactamente UNA vuelta de losetas cerámicas atérmicas blancas bordeando el perímetro completo de la piscina al ras del suelo.',
-    '- ' + losetasDesc,
-    '- Hora: 18:00 hs, luz dorada de tarde, cielo cálido con tonos anaranjados suaves en el horizonte.',
-    '- El agua se ve cristalina con reflejos dorados del sol de tarde.',
-    '- El entorno inmediato está mejorado: césped prolijo y verde, zona limpia y ordenada.',
-    '- Plantas decorativas discretas alrededor si hay espacio: palmeras bajas, agapantos, o gramíneas ornamentales.',
-    '- Calidad fotográfica 4K ultra nítida, iluminación natural perfecta, como foto de revista de arquitectura.',
-    'REGLAS TÉCNICAS CRÍTICAS:',
-    '- Mantener EXACTAMENTE el ángulo de cámara y perspectiva de la foto original sin ningún cambio.',
-    '- La piscina integrada debe verse 100% fotorrealista, nunca un render 3D ni ilustración.',
-    '- Las sombras deben ser coherentes con la luz de las 18 hs.',
-    '- No agregar elementos que no correspondan a una piscina terminada.',
-  ].join(' ');
+  var userText1 = [
+    modeloCtx,
+    '',
+    'VERSIÓN: BÁSICA',
+    '- UNA vuelta de losetas atérmicas blancas bordeando todo el perímetro al ras del suelo.',
+    '- ' + losetasBase,
+    '- Hora: 18:00 hs — luz dorada de tarde, cielo cálido con tonos anaranjados.',
+    '- Agua cristalina con reflejos dorados del sol de tarde.',
+    '- Entorno mejorado: césped prolijo, zona limpia, plantas decorativas discretas (palmeras bajas, agapantos).',
+    '- Fotorrealismo 4K, perspectiva y ángulo original sin ningún cambio.',
+  ].join('\n');
 
   try {
-    var u1 = await callOpenAI(p1, extraImages);
-    results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'Una vuelta de losetas · Luz de tarde 6 PM · Foto profesional 4K', url:u1, err:null });
+    document.querySelector('#pi1 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
+    var editPrompt1 = await analyzeWithGPT4o(GPT4O_SYSTEM, userText1, extraImages);
+    document.querySelector('#pi1 .prog-desc').textContent = 'Generando imagen con gpt-image-1…';
+    var u1 = await generateWithImageEdit(editPrompt1);
+    results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'Una vuelta de losetas · Luz de tarde 6 PM · 4K', url:u1, err:null });
   } catch(e) {
     results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'', url:null, err:e.message });
   }
   setPI(1, 'done');
-  await wait(2000);
+  await wait(500);
 
   // ── Versión 2: Full Experience ──
   setPI(2, 'active');
-  var p2 = [
-    'Fotomontaje hiperrealista 4K de máxima calidad. Integrar digitalmente una piscina de fibra de vidrio con terminaciones premium en el terreno de la PRIMERA imagen adjunta (foto del terreno real).',
-    refCtx,
-    base,
-    'VERSIÓN FULL EXPERIENCE — ESPECIFICACIONES:',
-    '- Terminación exterior: DOS vueltas de losetas cerámicas premium alrededor de todo el perímetro de la piscina.',
-    '- ' + losetasDesc,
-    '- Solarium: plataforma al ras del suelo hecha de losetas cerámicas, de 2 metros de largo, ubicada en la puntera de la piscina (el extremo por donde se ingresa al agua). Es amplia, prolija y está bien integrada al terreno.',
-    '- Iluminación subacuática: EXACTAMENTE DOS luces LED RGB instaladas en la pared lateral de la piscina (elegir el lado más natural según la perspectiva de la foto). Las luces emiten un haz de luz turquesa brillante que se refleja y se ve en el agua cristalina.',
-    '- Hora: atardecer 19:15 hs, cielo con degradado de naranja y rosa en el horizonte, tonos mágicos y cálidos.',
-    '- El agua refleja simultáneamente el atardecer naranja en la superficie y la luz turquesa de las luces en el interior.',
-    '- Decoración: plantas ornamentales premium (palmeras pequeñas, agapantos en flor, iluminación de jardín LED ambiental, macetas de diseño moderno). El espacio luce como villa de lujo o hotel boutique de 5 estrellas.',
-    '- Calidad fotográfica 4K ultra nítida, composición de portada de revista de arquitectura premium.',
-    'REGLAS TÉCNICAS CRÍTICAS:',
-    '- Mantener EXACTAMENTE el ángulo de cámara y perspectiva de la foto original.',
-    '- Todo debe verse 100% fotorrealista.',
-    '- Las sombras y reflexiones deben ser coherentes con el atardecer y las luces RGB.',
-    '- Las DOS luces deben verse claramente encendidas con brillo turquesa en el agua.',
-  ].join(' ');
+  var userText2 = [
+    modeloCtx,
+    '',
+    'VERSIÓN: FULL EXPERIENCE PREMIUM',
+    '- DOS vueltas de losetas cerámicas premium alrededor de todo el perímetro.',
+    '- ' + losetasBase,
+    '- Solarium: plataforma de losetas 2m de largo en la puntera de la piscina, al ras del suelo.',
+    '- Iluminación subacuática: DOS luces LED RGB en la pared lateral, haz turquesa brillante visible en el agua.',
+    '- Hora: atardecer 19:15 hs — cielo con degradado naranja y rosa.',
+    '- El agua refleja simultáneamente el atardecer naranja y la luz turquesa interior.',
+    '- Decoración premium: palmeras pequeñas, agapantos en flor, iluminación LED de jardín, macetas de diseño.',
+    '- Fotorrealismo 4K como portada de revista de arquitectura premium, perspectiva original sin cambios.',
+  ].join('\n');
 
   try {
-    var u2 = await callOpenAI(p2, extraImages);
-    results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'Doble loseta · Solarium 2m · Luces RGB turquesa · Atardecer · 4K', url:u2, err:null });
+    document.querySelector('#pi2 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
+    var editPrompt2 = await analyzeWithGPT4o(GPT4O_SYSTEM, userText2, extraImages);
+    document.querySelector('#pi2 .prog-desc').textContent = 'Generando imagen con gpt-image-1…';
+    var u2 = await generateWithImageEdit(editPrompt2);
+    results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'Doble loseta · Solarium 2m · Luces RGB · Atardecer · 4K', url:u2, err:null });
   } catch(e) {
     results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'', url:null, err:e.message });
   }
@@ -1157,9 +1162,59 @@ async function generate() {
   showResults(results, linea, modelo);
 }
 
-// ─── OPENAI ───────────────────────────────────────────────────────────────────
-async function callOpenAI(prompt, extraImages) {
-  // Imagen 1: foto del terreno (usuario)
+// ─── OPENAI PASO 1: ANÁLISIS CON GPT-4o ──────────────────────────────────────
+async function analyzeWithGPT4o(systemPrompt, userText, extraImages) {
+  var content = [];
+
+  // Imagen 1: terreno del cliente
+  content.push({
+    type: 'image_url',
+    image_url: { url: 'data:' + ST.mime + ';base64,' + ST.b64, detail: 'high' }
+  });
+
+  // Imágenes adicionales: render cenital + referencias NAWi
+  (extraImages || []).forEach(function(img) {
+    if (!img || !img.b64) return;
+    content.push({
+      type: 'image_url',
+      image_url: { url: 'data:' + img.mime + ';base64,' + img.b64, detail: 'high' }
+    });
+  });
+
+  // Texto del pedido
+  content.push({ type: 'text', text: userText });
+
+  var res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + OPENAI_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      max_tokens: 1500,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: content }
+      ]
+    })
+  });
+
+  if (!res.ok) {
+    var e = {};
+    try { e = await res.json(); } catch(ex) {}
+    var msg = (e.error && e.error.message) ? e.error.message : 'Error HTTP ' + res.status;
+    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
+    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
+    throw new Error('GPT-4o: ' + msg);
+  }
+
+  var data = await res.json();
+  return data.choices[0].message.content.trim();
+}
+
+// ─── OPENAI PASO 2: EDICIÓN CON GPT-IMAGE-1 ──────────────────────────────────
+async function generateWithImageEdit(editPrompt) {
   var byteStr = atob(ST.b64);
   var ab = new ArrayBuffer(byteStr.length);
   var ia = new Uint8Array(ab);
@@ -1167,24 +1222,11 @@ async function callOpenAI(prompt, extraImages) {
 
   var fd = new FormData();
   fd.append('model', 'gpt-image-1');
-  fd.append('prompt', prompt);
+  fd.append('prompt', editPrompt);
   fd.append('n', '1');
   fd.append('size', '1024x1024');
   fd.append('quality', 'high');
   fd.append('image[]', new Blob([ab], { type: ST.mime }), 'terreno.jpg');
-
-  // Imágenes adicionales: render cenital + fotos de referencia
-  if (extraImages && extraImages.length) {
-    extraImages.forEach(function(img, idx) {
-      if (!img || !img.b64) return;
-      var bytes = atob(img.b64);
-      var buf = new ArrayBuffer(bytes.length);
-      var arr = new Uint8Array(buf);
-      for (var j = 0; j < bytes.length; j++) arr[j] = bytes.charCodeAt(j);
-      var ext = (img.mime || 'image/jpeg').split('/')[1].split('+')[0] || 'jpg';
-      fd.append('image[]', new Blob([buf], { type: img.mime }), 'ref' + idx + '.' + ext);
-    });
-  }
 
   var res = await fetch('https://api.openai.com/v1/images/edits', {
     method: 'POST',
@@ -1194,18 +1236,18 @@ async function callOpenAI(prompt, extraImages) {
 
   if (!res.ok) {
     var e = {};
-    try { e = await res.json(); } catch(ex){}
-    var msg = (e.error && e.error.message) ? e.error.message : 'Error HTTP '+res.status;
-    if (res.status===401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
-    if (res.status===429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
-    if (res.status===400) throw new Error('Error en la solicitud: '+msg);
+    try { e = await res.json(); } catch(ex) {}
+    var msg = (e.error && e.error.message) ? e.error.message : 'Error HTTP ' + res.status;
+    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
+    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
+    if (res.status === 400) throw new Error('Error en la solicitud: ' + msg);
     throw new Error(msg);
   }
 
   var data = await res.json();
   if (data.data && data.data[0]) {
     if (data.data[0].url) return data.data[0].url;
-    if (data.data[0].b64_json) return 'data:image/png;base64,'+data.data[0].b64_json;
+    if (data.data[0].b64_json) return 'data:image/png;base64,' + data.data[0].b64_json;
   }
   throw new Error('No se recibió imagen en la respuesta de OpenAI.');
 }
