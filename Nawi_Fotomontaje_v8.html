@@ -1180,7 +1180,8 @@ async function generate() {
   try {
     document.querySelector('#pi1 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
     var editPrompt1 = await analyzeWithGPT4o(GPT4O_SYSTEM, userText1, extraImages);
-    document.querySelector('#pi1 .prog-desc').textContent = 'Generando imagen con gpt-image-1…';
+    console.log('[generate] ➡ Prompt v1 enviado a gpt-image-1:', editPrompt1);
+    document.querySelector('#pi1 .prog-desc').textContent = 'Generando imagen… (' + editPrompt1.length + ' chars)';
     var u1 = await generateWithImageEdit(editPrompt1);
     results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'Una vuelta de losetas · Luz de tarde 6 PM · 4K', url:u1, err:null });
   } catch(e) {
@@ -1263,7 +1264,8 @@ async function generate() {
   try {
     document.querySelector('#pi2 .prog-desc').textContent = 'Analizando terreno con GPT-4o…';
     var editPrompt2 = await analyzeWithGPT4o(GPT4O_SYSTEM, userText2, extraImages);
-    document.querySelector('#pi2 .prog-desc').textContent = 'Generando imagen con gpt-image-1…';
+    console.log('[generate] ➡ Prompt v2 enviado a gpt-image-1:', editPrompt2);
+    document.querySelector('#pi2 .prog-desc').textContent = 'Generando imagen… (' + editPrompt2.length + ' chars)';
     var u2 = await generateWithImageEdit(editPrompt2);
     results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'Doble loseta · Solarium 2m · Luces RGB · Atardecer · 4K', url:u2, err:null });
   } catch(e) {
@@ -1276,32 +1278,28 @@ async function generate() {
 
 // ─── OPENAI PASO 1: ANÁLISIS CON GPT-4o ──────────────────────────────────────
 async function analyzeWithGPT4o(systemPrompt, userText, extraImages) {
-  var content = [];
+  var imgCount = 1 + (extraImages || []).filter(Boolean).length;
+  console.log('[GPT-4o] Enviando ' + imgCount + ' imágenes (1 terreno + ' + (imgCount - 1) + ' refs)');
+  console.log('[GPT-4o] userText (' + userText.length + ' chars):', userText);
 
-  // Imagen 1: terreno del cliente
+  var content = [];
   content.push({
     type: 'image_url',
     image_url: { url: 'data:' + ST.mime + ';base64,' + ST.b64, detail: 'high' }
   });
-
-  // Imágenes adicionales: render cenital + referencias NAWi
-  (extraImages || []).forEach(function(img) {
+  (extraImages || []).forEach(function(img, i) {
     if (!img || !img.b64) return;
+    console.log('[GPT-4o] Ref imagen ' + i + ': ' + img.mime + ', ~' + Math.round(img.b64.length * 0.75 / 1024) + ' KB');
     content.push({
       type: 'image_url',
       image_url: { url: 'data:' + img.mime + ';base64,' + img.b64, detail: 'high' }
     });
   });
-
-  // Texto del pedido
   content.push({ type: 'text', text: userText });
 
   var res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + OPENAI_KEY,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Authorization': 'Bearer ' + OPENAI_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o',
       max_tokens: 1500,
@@ -1312,25 +1310,39 @@ async function analyzeWithGPT4o(systemPrompt, userText, extraImages) {
     })
   });
 
-  if (!res.ok) {
-    var e = {};
-    try { e = await res.json(); } catch(ex) {}
-    var msg = (e.error && e.error.message) ? e.error.message : 'Error HTTP ' + res.status;
-    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
-    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
-    throw new Error('GPT-4o: ' + msg);
+  console.log('[GPT-4o] HTTP status:', res.status);
+  var rawText = await res.text();
+  console.log('[GPT-4o] Respuesta raw:', rawText.substring(0, 800));
+
+  var data;
+  try { data = JSON.parse(rawText); } catch(ex) {
+    throw new Error('GPT-4o respuesta inválida: ' + rawText.substring(0, 200));
   }
 
-  var data = await res.json();
-  return data.choices[0].message.content.trim();
+  if (!res.ok) {
+    console.error('[GPT-4o] Error:', data);
+    var msg = (data.error && data.error.message) ? data.error.message : 'Error HTTP ' + res.status;
+    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
+    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
+    throw new Error('GPT-4o ' + res.status + ': ' + msg);
+  }
+
+  var generatedPrompt = data.choices[0].message.content.trim();
+  console.log('[GPT-4o] ✅ Prompt generado (' + generatedPrompt.length + ' chars):', generatedPrompt);
+  return generatedPrompt;
 }
 
 // ─── OPENAI PASO 2: EDICIÓN CON GPT-IMAGE-1 ──────────────────────────────────
 async function generateWithImageEdit(editPrompt) {
+  console.log('[gpt-image-1] Iniciando edición...');
+  console.log('[gpt-image-1] Prompt completo (' + editPrompt.length + ' chars):', editPrompt);
+  console.log('[gpt-image-1] Imagen terreno: mime=' + ST.mime + ', ~' + Math.round(ST.b64.length * 0.75 / 1024) + ' KB');
+
   var byteStr = atob(ST.b64);
   var ab = new ArrayBuffer(byteStr.length);
   var ia = new Uint8Array(ab);
   for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+  var imgBlob = new Blob([ab], { type: ST.mime });
 
   var fd = new FormData();
   fd.append('model', 'gpt-image-1');
@@ -1338,7 +1350,11 @@ async function generateWithImageEdit(editPrompt) {
   fd.append('n', '1');
   fd.append('size', '1024x1024');
   fd.append('quality', 'high');
-  fd.append('image[]', new Blob([ab], { type: ST.mime }), 'terreno.jpg');
+  fd.append('image[]', imgBlob, 'terreno.jpg');
+
+  console.log('[FormData] model: gpt-image-1');
+  console.log('[FormData] prompt length:', editPrompt.length);
+  console.log('[FormData] image[]: Blob(type=' + imgBlob.type + ', size=' + Math.round(imgBlob.size / 1024) + ' KB, filename=terreno.jpg)');
 
   var res = await fetch('https://api.openai.com/v1/images/edits', {
     method: 'POST',
@@ -1346,22 +1362,39 @@ async function generateWithImageEdit(editPrompt) {
     body: fd
   });
 
-  if (!res.ok) {
-    var e = {};
-    try { e = await res.json(); } catch(ex) {}
-    var msg = (e.error && e.error.message) ? e.error.message : 'Error HTTP ' + res.status;
-    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
-    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
-    if (res.status === 400) throw new Error('Error en la solicitud: ' + msg);
-    throw new Error(msg);
+  console.log('[gpt-image-1] HTTP status:', res.status);
+  var rawText = await res.text();
+  console.log('[gpt-image-1] Respuesta raw (500 chars):', rawText.substring(0, 500));
+
+  var data;
+  try { data = JSON.parse(rawText); } catch(ex) {
+    throw new Error('gpt-image-1 respuesta inválida: ' + rawText.substring(0, 300));
   }
 
-  var data = await res.json();
-  if (data.data && data.data[0]) {
-    if (data.data[0].url) return data.data[0].url;
-    if (data.data[0].b64_json) return 'data:image/png;base64,' + data.data[0].b64_json;
+  if (!res.ok) {
+    console.error('[gpt-image-1] Error completo:', data);
+    var msg = (data.error && data.error.message) ? data.error.message : 'Error HTTP ' + res.status;
+    var code = data.error && data.error.code ? ' [' + data.error.code + ']' : '';
+    if (res.status === 401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
+    if (res.status === 429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
+    throw new Error('gpt-image-1 ' + res.status + code + ': ' + msg);
   }
-  throw new Error('No se recibió imagen en la respuesta de OpenAI.');
+
+  console.log('[gpt-image-1] ✅ Respuesta OK. Estructura data.data:', JSON.stringify(data.data ? data.data[0] : data).substring(0, 200));
+
+  if (data.data && data.data[0]) {
+    if (data.data[0].url) {
+      console.log('[gpt-image-1] Imagen como URL');
+      return data.data[0].url;
+    }
+    if (data.data[0].b64_json) {
+      console.log('[gpt-image-1] Imagen como b64_json (' + data.data[0].b64_json.length + ' chars)');
+      return 'data:image/png;base64,' + data.data[0].b64_json;
+    }
+    throw new Error('gpt-image-1: respuesta sin url ni b64_json. Keys: ' + Object.keys(data.data[0]).join(', '));
+  }
+
+  throw new Error('gpt-image-1: respuesta inesperada — ' + JSON.stringify(data).substring(0, 300));
 }
 
 // ─── SHOW RESULTS ─────────────────────────────────────────────────────────────
