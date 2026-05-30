@@ -457,127 +457,18 @@ footer {
 .cpill.sel { border-color:var(--blue); background:var(--cyan-light); color:var(--blue); }
 .cpill-dot { width:18px; height:18px; border-radius:50%; flex-shrink:0; border:1px solid rgba(0,0,0,0.1); }
 
-/* API KEY OVERLAY */
-.overlay-key {
-  position: fixed; inset: 0; z-index: 200;
-  background: linear-gradient(135deg, var(--blue-nav) 0%, var(--blue) 60%, var(--blue-mid) 100%);
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.key-card {
-  background: white; border-radius: 20px;
-  padding: 36px 28px; max-width: 420px; width: 100%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  position: relative;
-}
-.key-logo-wrap { text-align: center; margin-bottom: 28px; }
-.key-logo-icon {
-  width: 56px; height: 56px;
-  background: linear-gradient(135deg, #00aacc, #00c2aa);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px; margin: 0 auto 10px;
-}
-.key-app-name {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 20px; font-weight: 800; color: var(--blue-nav);
-}
-.key-app-name span { color: #00aacc; }
-.key-app-sub {
-  font-size: 11px; font-weight: 700; color: var(--gray3);
-  letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;
-}
-.key-title {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 18px; font-weight: 800; color: var(--blue-nav);
-  margin-bottom: 8px;
-}
-.key-sub { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
-.key-input-wrap { position: relative; margin-bottom: 12px; }
-.key-input {
-  width: 100%; background: var(--gray1);
-  border: 2px solid var(--gray2); border-radius: 10px;
-  color: var(--text); font-family: 'Lato', sans-serif;
-  font-size: 13px; padding: 13px 44px 13px 14px;
-  outline: none; transition: border 0.2s; letter-spacing: 0.5px;
-}
-.key-input:focus { border-color: var(--blue); background: white; }
-.key-eye {
-  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer;
-  font-size: 16px; color: var(--gray3); padding: 4px; line-height: 1;
-}
-.btn-key-save {
-  width: 100%;
-  background: linear-gradient(135deg, var(--blue), var(--blue-mid));
-  color: white; font-family: 'Montserrat', sans-serif;
-  font-size: 14px; font-weight: 800; padding: 15px;
-  border: none; border-radius: 10px; cursor: pointer;
-  letter-spacing: 0.3px; transition: all 0.2s; text-transform: uppercase;
-}
-.btn-key-save:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(30,111,165,0.4); }
-.key-err {
-  background: #fff0f0; border: 1.5px solid #ffc0c0;
-  color: #c0392b; border-radius: 8px;
-  padding: 8px 12px; font-size: 12px; margin-top: 10px;
-}
-.key-hint { font-size: 11px; color: var(--gray3); margin-top: 14px; text-align: center; }
-.key-hint strong { color: var(--text2); }
-.key-close {
-  position: absolute; top: 12px; right: 14px;
-  background: none; border: none; cursor: pointer;
-  font-size: 20px; color: var(--gray3); line-height: 1; padding: 4px;
-}
-.key-close:hover { color: var(--text); }
-/* CAMBIAR CLAVE BUTTON (header) */
-.btn-change-key {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: rgba(255,255,255,0.85);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px; font-weight: 600;
-  padding: 6px 12px; border-radius: 20px;
-  cursor: pointer; transition: all 0.2s;
-  letter-spacing: 0.3px; white-space: nowrap;
-}
-.btn-change-key:hover { background: rgba(255,255,255,0.2); color: white; }
 
 .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
-<!-- OVERLAY API KEY -->
-<div id="overlayApiKey" class="overlay-key">
-  <div class="key-card">
-    <button class="key-close hidden" id="keyClose" onclick="hideKeyOverlay()" title="Cancelar">✕</button>
-    <div class="key-logo-wrap">
-      <div class="key-logo-icon">🌊</div>
-      <div class="key-app-name">NAWi <span>Piscinas</span></div>
-      <div class="key-app-sub">Fotomontaje IA</div>
-    </div>
-    <div class="key-title">Ingresá tu API Key de Replicate</div>
-    <div class="key-sub">Para generar fotomontajes necesitás una API Key de Replicate. Se guarda en este navegador y no se comparte con nadie.</div>
-    <div class="key-input-wrap">
-      <input type="password" class="key-input" id="keyInput" placeholder="r8_..." autocomplete="off"
-             onkeydown="if(event.key==='Enter') saveKey()">
-      <button class="key-eye" id="keyEye" onclick="toggleKeyVisibility()" tabindex="-1">👁</button>
-    </div>
-    <button class="btn-key-save" onclick="saveKey()">Guardar y continuar →</button>
-    <div class="key-err hidden" id="keyErr"></div>
-    <div class="key-hint">Obtené tu clave en <strong>replicate.com/account/api-tokens</strong></div>
-  </div>
-</div>
-
 <header>
   <div class="logo-wrap">
     <div class="logo-icon">🌊</div>
     <div class="logo-text">NAWi <span>Piscinas</span></div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <button class="btn-change-key hidden" id="btnCambiarClave" onclick="showKeyOverlay(true)">🔑 Cambiar clave</button>
-    <div class="badge-ia">Fotomontaje IA</div>
-  </div>
+  <div class="badge-ia">Fotomontaje IA</div>
 </header>
 
 <div class="hero-strip">
@@ -751,19 +642,6 @@ footer {
 </footer>
 
 <script>
-// ─── API KEY ──────────────────────────────────────────────────────────────────
-var REPLICATE_KEY = ''
-var _memKey = '' // fallback en memoria para contextos donde localStorage no está disponible
-
-function storeKey(val) {
-  _memKey = val
-  try { localStorage.setItem('nawi_replicate_key', val) } catch(e) {}
-}
-
-function loadKey() {
-  if (_memKey) return _memKey
-  try { return localStorage.getItem('nawi_replicate_key') || '' } catch(e) { return '' }
-}
 // ─── DATOS REALES NAWI ────────────────────────────────────────────────────────
 var MODELOS = {
   'SUNDECK': [
@@ -854,13 +732,6 @@ var ST = { b64:null, mime:null, colorPiscina:'celeste', colorLabel:'Celeste', co
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  var savedKey = loadKey();
-  if (savedKey) {
-    REPLICATE_KEY = savedKey;
-    document.getElementById('overlayApiKey').classList.add('hidden');
-    document.getElementById('btnCambiarClave').classList.remove('hidden');
-  }
-
   document.getElementById('ocH').addEventListener('click', function(){
     document.getElementById('ocH').classList.add('sel');
     document.getElementById('ocV').classList.remove('sel');
@@ -874,59 +745,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   selectLinea(document.querySelector('.ltab.active'));
 });
-
-// ─── API KEY MANAGEMENT ───────────────────────────────────────────────────────
-function showKeyOverlay(isChange) {
-  var overlay = document.getElementById('overlayApiKey');
-  var closeBtn = document.getElementById('keyClose');
-  var input = document.getElementById('keyInput');
-  overlay.classList.remove('hidden');
-  if (isChange) {
-    closeBtn.classList.remove('hidden');
-    input.value = '';
-  } else {
-    closeBtn.classList.add('hidden');
-    input.value = '';
-  }
-  document.getElementById('keyErr').classList.add('hidden');
-  input.type = 'password';
-  document.getElementById('keyEye').textContent = '👁';
-  input.focus();
-}
-
-function hideKeyOverlay() {
-  document.getElementById('overlayApiKey').classList.add('hidden');
-}
-
-function saveKey() {
-  var val = document.getElementById('keyInput').value.trim();
-  var errEl = document.getElementById('keyErr');
-  if (!val) {
-    errEl.textContent = 'Por favor ingresá tu API Key de OpenAI.';
-    errEl.classList.remove('hidden'); return;
-  }
-  if (!val.startsWith('r8_')) {
-    errEl.textContent = 'La clave de Replicate debe comenzar con "r8_". Verificá en replicate.com/account/api-tokens';
-    errEl.classList.remove('hidden'); return;
-  }
-  REPLICATE_KEY = val;
-  storeKey(val);
-  document.getElementById('overlayApiKey').classList.add('hidden');
-  document.getElementById('btnCambiarClave').classList.remove('hidden');
-  errEl.classList.add('hidden');
-}
-
-function toggleKeyVisibility() {
-  var input = document.getElementById('keyInput');
-  var eye = document.getElementById('keyEye');
-  if (input.type === 'password') {
-    input.type = 'text';
-    eye.textContent = '🙈';
-  } else {
-    input.type = 'password';
-    eye.textContent = '👁';
-  }
-}
 
 function selectLinea(btn) {
   document.querySelectorAll('.ltab').forEach(function(b){ b.classList.remove('active'); });
@@ -1049,11 +867,6 @@ async function generate() {
     errEl.textContent = '📷 Por favor subí una foto del terreno antes de continuar.';
     errEl.classList.remove('hidden'); return;
   }
-  if (!REPLICATE_KEY) {
-    errEl.textContent = '🔑 Configurá tu API Key usando el botón "Cambiar clave" en el encabezado.';
-    errEl.classList.remove('hidden'); return;
-  }
-
   var linea     = ST.lineaActual;
   var modelo    = getModeloActual();
   var colorInt  = ST.colorLabel;
@@ -1245,99 +1058,41 @@ async function generate() {
   showResults(results, linea, modelo);
 }
 
-// ─── REPLICATE: FLUX 1.1 PRO ──────────────────────────────────────────────────
+// ─── GENERACIÓN VIA /api/generate ─────────────────────────────────────────────
 async function callReplicate(prompt) {
-  console.log('[Replicate] Iniciando con FLUX 1.1 Pro...');
-  console.log('[Replicate] Prompt (' + prompt.length + ' chars):', prompt);
-  console.log('[Replicate] Imagen terreno: mime=' + ST.mime + ', ~' + Math.round(ST.b64.length * 0.75 / 1024) + ' KB');
+  console.log('[/api/generate] Enviando prompt (' + prompt.length + ' chars)');
+  console.log('[/api/generate] Imagen: mime=' + ST.mime + ', ~' + Math.round(ST.b64.length * 0.75 / 1024) + ' KB');
 
-  var imageDataUrl = 'data:' + ST.mime + ';base64,' + ST.b64;
-
-  // ── Paso 1: crear predicción ──
-  var createRes = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions', {
+  var res = await fetch('/api/generate', {
     method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + REPLICATE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'wait=5'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      input: {
-        prompt: prompt,
-        image: imageDataUrl,
-        prompt_strength: 0.85,
-        aspect_ratio: '1:1',
-        output_format: 'jpg',
-        output_quality: 90,
-        safety_tolerance: 2
-      }
+      prompt: prompt,
+      imageBase64: ST.b64,
+      mimeType: ST.mime
     })
   });
 
-  console.log('[Replicate] Create HTTP status:', createRes.status);
-  var rawCreate = await createRes.text();
-  console.log('[Replicate] Create response:', rawCreate.substring(0, 600));
+  console.log('[/api/generate] HTTP status:', res.status);
+  var rawText = await res.text();
+  console.log('[/api/generate] Respuesta:', rawText.substring(0, 500));
 
-  var prediction;
-  try { prediction = JSON.parse(rawCreate); } catch(ex) {
-    throw new Error('Replicate: respuesta inválida — ' + rawCreate.substring(0, 200));
+  var data;
+  try { data = JSON.parse(rawText); } catch(ex) {
+    throw new Error('Respuesta inválida del servidor: ' + rawText.substring(0, 200));
   }
 
-  if (!createRes.ok) {
-    console.error('[Replicate] Error al crear predicción:', prediction);
-    var msg = prediction.detail || (prediction.error && prediction.error.toString()) || 'Error HTTP ' + createRes.status;
-    if (createRes.status === 401) throw new Error('API Key de Replicate inválida. Verificá en replicate.com/account/api-tokens');
-    if (createRes.status === 402) throw new Error('Sin créditos en Replicate. Verificá tu billing en replicate.com');
-    if (createRes.status === 429) throw new Error('Límite de Replicate alcanzado. Esperá unos segundos e intentá de nuevo.');
-    throw new Error('Replicate ' + createRes.status + ': ' + msg);
+  if (!res.ok) {
+    console.error('[/api/generate] Error:', data);
+    throw new Error('Error ' + res.status + ': ' + (data.error || 'Error desconocido'));
   }
 
-  // Si Prefer:wait respondió ya terminado
-  if (prediction.status === 'succeeded') {
-    var out = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
-    console.log('[Replicate] ✅ Completado en modo sync:', out);
-    return out;
+  if (!data.imageUrl) {
+    throw new Error('No se recibió imageUrl. Respuesta: ' + JSON.stringify(data).substring(0, 200));
   }
 
-  if (prediction.status === 'failed' || prediction.status === 'canceled') {
-    throw new Error('Replicate: generación fallida — ' + (prediction.error || prediction.status));
-  }
-
-  // ── Paso 2: polling cada 3 segundos ──
-  var statusUrl = prediction.urls && prediction.urls.get;
-  if (!statusUrl) throw new Error('Replicate: no se recibió URL de status en la respuesta');
-
-  console.log('[Replicate] Polling:', statusUrl);
-
-  for (var attempt = 0; attempt < 40; attempt++) {
-    await wait(3000);
-
-    var pollRes = await fetch(statusUrl, {
-      headers: { 'Authorization': 'Bearer ' + REPLICATE_KEY }
-    });
-    var pollRaw = await pollRes.text();
-    var poll;
-    try { poll = JSON.parse(pollRaw); } catch(ex) {
-      throw new Error('Replicate: respuesta de polling inválida');
-    }
-
-    console.log('[Replicate] Poll #' + (attempt + 1) + ' — status: ' + poll.status);
-
-    if (poll.status === 'succeeded') {
-      var outputUrl = Array.isArray(poll.output) ? poll.output[0] : poll.output;
-      console.log('[Replicate] ✅ Imagen generada:', outputUrl);
-      return outputUrl;
-    }
-
-    if (poll.status === 'failed' || poll.status === 'canceled') {
-      console.error('[Replicate] Fallo:', poll.error);
-      throw new Error('Replicate: generación fallida — ' + (poll.error || poll.status));
-    }
-
-    // 'starting' | 'processing' → seguir esperando
-  }
-
-  throw new Error('Replicate: timeout — la imagen tardó más de 2 minutos en generarse.');
+  console.log('[/api/generate] ✅ Imagen generada:', data.imageUrl);
+  return data.imageUrl;
 }
 
 // ─── SHOW RESULTS ─────────────────────────────────────────────────────────────
