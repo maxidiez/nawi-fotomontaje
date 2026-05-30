@@ -1087,12 +1087,13 @@ async function callReplicate(prompt) {
     throw new Error('Error ' + res.status + ': ' + (data.error || 'Error desconocido'));
   }
 
-  if (!data.imageUrl) {
-    throw new Error('No se recibió imageUrl. Respuesta: ' + JSON.stringify(data).substring(0, 200));
+  if (!data.imageBase64) {
+    throw new Error('No se recibió imageBase64. Respuesta: ' + JSON.stringify(data).substring(0, 200));
   }
 
-  console.log('[/api/generate] ✅ Imagen generada:', data.imageUrl);
-  return data.imageUrl;
+  var dataUrl = 'data:' + (data.mimeType || 'image/webp') + ';base64,' + data.imageBase64;
+  console.log('[/api/generate] ✅ Imagen base64 recibida (' + Math.round(dataUrl.length / 1024) + ' KB)');
+  return dataUrl;
 }
 
 // ─── SHOW RESULTS ─────────────────────────────────────────────────────────────
