@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAWi Piscinas — Fotomontaje IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white: #ffffff;
+  --off: #f5f8fb;
+  --light: #e8f2f8;
+  --blue-nav: #1a3a5c;
+  --blue: #1e6fa5;
+  --blue-mid: #2389c8;
+  --cyan: #00aacc;
+  --cyan-light: #e0f5fb;
+  --teal: #00c2aa;
+  --gray1: #f0f4f7;
+  --gray2: #dde6ee;
+  --gray3: #8fa8bc;
+  --dark: #1a2b3c;
+  --text: #2c3e50;
+  --text2: #5a7080;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(30,111,165,0.10);
+  --shadow2: 0 8px 40px rgba(30,111,165,0.14);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--off);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* HEADER */
+header {
+  background: var(--blue-nav);
+  padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo-wrap {
+  display: flex; align-items: center; gap: 12px;
+}
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #00aacc, #00c2aa);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.logo-text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px; font-weight: 800;
+  color: white; letter-spacing: 1px;
+}
+.logo-text span { color: #00d4ee; }
+.badge-ia {
+  background: rgba(0,210,238,0.18);
+  border: 1px solid rgba(0,210,238,0.35);
+  color: #00d4ee;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+
+/* HERO STRIP */
+.hero-strip {
+  background: linear-gradient(135deg, var(--blue-nav) 0%, var(--blue) 60%, var(--blue-mid) 100%);
+  padding: 28px 24px;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.hero-strip::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.hero-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(18px, 4vw, 26px);
+  font-weight: 700; color: white;
+  margin-bottom: 6px; position: relative;
+}
+.hero-sub {
+  font-size: 13px; color: rgba(255,255,255,0.72);
+  position: relative;
+}
+
+/* STEPS */
+.steps-wrap {
+  display: flex; align-items: center;
+  padding: 20px 24px 0;
+  max-width: 640px; margin: 0 auto;
+  gap: 0;
+}
+.step-item {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+.step-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gray2); color: var(--gray3);
+  transition: all 0.3s; flex-shrink: 0;
+}
+.step-num.active { background: var(--blue); color: white; box-shadow: 0 2px 10px rgba(30,111,165,0.3); }
+.step-num.done { background: var(--teal); color: white; }
+.step-txt { font-size: 11px; font-weight: 600; color: var(--gray3); white-space: nowrap; }
+.step-txt.active { color: var(--blue); }
+.step-line { flex: 1; height: 2px; background: var(--gray2); min-width: 16px; }
+.step-line.done { background: var(--teal); }
+
+/* MAIN */
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.card-head {
+  background: linear-gradient(90deg, var(--blue-nav), var(--blue));
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.card-head-icon { font-size: 16px; }
+.card-head-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: white; letter-spacing: 0.3px;
+}
+.card-body { padding: 20px; }
+
+/* FORM */
+.field-label {
+  display: block;
+  font-size: 12px; font-weight: 700;
+  color: var(--text2); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-bottom: 7px;
+}
+select {
+  width: 100%;
+  background: var(--gray1);
+  border: 1.5px solid var(--gray2);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: 'Lato', sans-serif;
+  font-size: 14px; font-weight: 500;
+  padding: 11px 14px;
+  outline: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238fa8bc' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border 0.2s;
+  cursor: pointer;
+}
+select:focus { border-color: var(--blue); background-color: white; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.field-row:last-child { margin-bottom: 0; }
+@media(max-width:480px){ .field-row { grid-template-columns: 1fr; gap: 10px; } }
+
+/* DIM TAG */
+.dim-tag {
+  display: inline-block; margin-top: 6px;
+  background: var(--cyan-light); color: var(--blue);
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+}
+
+/* ORIENTATION */
+.orient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.orient-card {
+  border: 2px solid var(--gray2);
+  border-radius: 10px; padding: 14px 10px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--gray1);
+  user-select: none;
+}
+.orient-card:hover { border-color: var(--cyan); }
+.orient-card.sel { border-color: var(--blue); background: var(--cyan-light); }
+.orient-card input { display: none; }
+.orient-svg { width: 72px; height: 52px; }
+.orient-lbl { font-size: 13px; font-weight: 700; color: var(--text); }
+
+/* COLOR SELECTOR */
+.color-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.color-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer; transition: all 0.2s;
+  position: relative; outline: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.color-btn.sel {
+  border-color: var(--blue);
+  transform: scale(1.18);
+  box-shadow: 0 3px 12px rgba(30,111,165,0.35);
+}
+.color-btn.sel::after {
+  content: '✓';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 15px; font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* UPLOAD */
+.upload-zone {
+  border: 2px dashed var(--gray2);
+  border-radius: 12px;
+  padding: 28px 16px; text-align: center;
+  cursor: pointer; transition: all 0.2s;
+  background: var(--gray1);
+}
+.upload-zone:hover { border-color: var(--blue); background: var(--cyan-light); }
+.upload-zone.has-img { border-style: solid; border-color: var(--teal); padding: 0; overflow: hidden; }
+.upload-zone img { width: 100%; max-height: 240px; object-fit: cover; display: block; }
+.upload-icon-wrap { font-size: 32px; margin-bottom: 8px; }
+.upload-title { font-size: 14px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+.upload-sub { font-size: 12px; color: var(--text2); }
+.change-btn {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(26,58,92,0.85);
+  color: white; font-size: 11px; font-weight: 700;
+  padding: 5px 12px; border-radius: 20px;
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.3px;
+}
+.upload-zone { position: relative; }
+#fileInput { display: none; }
+
+/* GENERATE BTN */
+.btn-gen {
+  width: 100%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-mid));
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px; font-weight: 800;
+  padding: 17px; border: none;
+  border-radius: 12px; cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(30,111,165,0.35);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.btn-gen:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(30,111,165,0.45); }
+.btn-gen:active { transform: translateY(0); }
+.btn-gen:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+/* LOADING */
+.load-card {
+  background: white; border-radius: var(--radius);
+  box-shadow: var(--shadow2);
+  padding: 36px 24px; text-align: center;
+}
+.wave-wrap { display: flex; justify-content: center; gap: 6px; margin-bottom: 24px; }
+.wave-bar {
+  width: 5px; border-radius: 3px;
+  background: linear-gradient(180deg, var(--blue), var(--cyan));
+  animation: wave 1.2s ease-in-out infinite;
+}
+.wave-bar:nth-child(1){ height: 20px; animation-delay: 0s; }
+.wave-bar:nth-child(2){ height: 36px; animation-delay: 0.15s; }
+.wave-bar:nth-child(3){ height: 28px; animation-delay: 0.3s; }
+.wave-bar:nth-child(4){ height: 40px; animation-delay: 0.15s; }
+.wave-bar:nth-child(5){ height: 20px; animation-delay: 0s; }
+@keyframes wave {
+  0%,100% { transform: scaleY(1); opacity: 1; }
+  50% { transform: scaleY(0.4); opacity: 0.5; }
+}
+.load-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px; font-weight: 800; color: var(--blue-nav);
+  margin-bottom: 8px;
+}
+.load-sub { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.prog-list { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.prog-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--gray1); border-radius: 10px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--gray2);
+  transition: all 0.3s;
+}
+.prog-item.active { border-left-color: var(--blue); background: var(--cyan-light); }
+.prog-item.done { border-left-color: var(--teal); }
+.prog-dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0;
+  background: var(--gray2); color: var(--gray3);
+  font-weight: 700;
+  transition: all 0.3s;
+}
+.prog-dot.active {
+  background: var(--blue); color: white;
+  animation: pulse 1s ease-in-out infinite;
+}
+.prog-dot.done { background: var(--teal); color: white; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(0.9)} }
+.prog-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.prog-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* RESULTS */
+.res-header { margin-bottom: 20px; }
+.res-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 22px; font-weight: 800; color: var(--blue-nav);
+  margin-bottom: 4px;
+}
+.res-sub { font-size: 13px; color: var(--text2); }
+
+.res-card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.res-top {
+  padding: 14px 18px 10px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--gray1);
+}
+.res-badge {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px; font-weight: 800;
+  padding: 4px 12px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.badge-basic { background: var(--cyan-light); color: var(--blue); }
+.badge-full { background: #fff3e0; color: #c47800; }
+.res-name { font-size: 15px; font-weight: 700; color: var(--blue-nav); }
+.res-desc { font-size: 12px; color: var(--text2); padding: 8px 18px 12px; line-height: 1.5; }
+.res-img { width: 100%; display: block; }
+.res-err { padding: 24px 18px; text-align: center; color: var(--text2); font-size: 13px; }
+.res-actions {
+  display: flex; gap: 10px; padding: 12px 18px;
+  border-top: 1px solid var(--gray1);
+}
+.btn-dl {
+  flex: 1; background: var(--blue); color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+  padding: 10px; border: none; border-radius: 8px;
+  cursor: pointer; transition: all 0.2s;
+  text-transform: uppercase;
+}
+.btn-dl:hover { background: var(--blue-nav); }
+.btn-share {
+  background: var(--gray1); color: var(--text2);
+  border: 1.5px solid var(--gray2);
+  font-size: 13px; padding: 10px 14px;
+  border-radius: 8px; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-share:hover { background: var(--cyan-light); border-color: var(--cyan); }
+
+.btn-new {
+  width: 100%;
+  background: white; color: var(--blue);
+  border: 2px solid var(--blue);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px; font-weight: 700;
+  padding: 14px; border-radius: 12px;
+  cursor: pointer; transition: all 0.2s;
+  text-transform: uppercase; letter-spacing: 0.3px;
+  margin-top: 6px;
+}
+.btn-new:hover { background: var(--cyan-light); }
+
+/* ERROR */
+.err-box {
+  background: #fff0f0; border: 1.5px solid #ffc0c0;
+  color: #c0392b; border-radius: 10px;
+  padding: 12px 16px; font-size: 13px; line-height: 1.6;
+  margin-top: 12px;
+}
+
+/* FOOTER */
+footer {
+  background: var(--blue-nav);
+  text-align: center; padding: 18px;
+  font-size: 11px; color: rgba(255,255,255,0.45);
+  margin-top: 32px;
+}
+
+/* LINEA TABS */
+.linea-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.ltab {
+  background: var(--gray1); border: 1.5px solid var(--gray2);
+  color: var(--text2); font-family:'Montserrat',sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:0.3px;
+  padding:8px 14px; border-radius:20px; cursor:pointer;
+  transition:all 0.2s; text-transform:uppercase;
+}
+.ltab:hover { border-color:var(--blue); color:var(--blue); }
+.ltab.active { background:var(--blue); border-color:var(--blue); color:white; }
+
+/* MODELO CARDS */
+.modelo-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:8px; margin-bottom:12px;
+}
+.mc {
+  border:2px solid var(--gray2); border-radius:10px;
+  padding:10px 10px; cursor:pointer; transition:all 0.2s;
+  background:var(--gray1); text-align:center;
+}
+.mc:hover { border-color:var(--blue); }
+.mc.sel { border-color:var(--blue); background:var(--cyan-light); }
+.mc-label { font-family:'Montserrat',sans-serif; font-size:12px; font-weight:700; color:var(--blue-nav); }
+.mc-dim { font-size:11px; color:var(--text2); margin-top:2px; }
+
+/* MODELO INFO */
+.modelo-info-box {
+  background:var(--gray1); border-radius:10px;
+  padding:12px 14px; display:grid;
+  grid-template-columns:1fr 1fr; gap:6px 12px;
+}
+.mi-row { display:flex; flex-direction:column; gap:1px; }
+.mi-k { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--gray3); }
+.mi-v { font-size:13px; font-weight:600; color:var(--text); }
+
+/* COLOR PILLS */
+.color-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.cpill {
+  display:flex; align-items:center; gap:8px;
+  background:var(--gray1); border:2px solid var(--gray2);
+  border-radius:20px; padding:7px 14px;
+  font-family:'Lato',sans-serif; font-size:13px; font-weight:700;
+  color:var(--text); cursor:pointer; transition:all 0.2s;
+}
+.cpill:hover { border-color:var(--blue); }
+.cpill.sel { border-color:var(--blue); background:var(--cyan-light); color:var(--blue); }
+.cpill-dot { width:18px; height:18px; border-radius:50%; flex-shrink:0; border:1px solid rgba(0,0,0,0.1); }
+
+/* API KEY OVERLAY */
+.overlay-key {
+  position: fixed; inset: 0; z-index: 200;
+  background: linear-gradient(135deg, var(--blue-nav) 0%, var(--blue) 60%, var(--blue-mid) 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.key-card {
+  background: white; border-radius: 20px;
+  padding: 36px 28px; max-width: 420px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  position: relative;
+}
+.key-logo-wrap { text-align: center; margin-bottom: 28px; }
+.key-logo-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #00aacc, #00c2aa);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin: 0 auto 10px;
+}
+.key-app-name {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px; font-weight: 800; color: var(--blue-nav);
+}
+.key-app-name span { color: #00aacc; }
+.key-app-sub {
+  font-size: 11px; font-weight: 700; color: var(--gray3);
+  letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;
+}
+.key-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px; font-weight: 800; color: var(--blue-nav);
+  margin-bottom: 8px;
+}
+.key-sub { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; }
+.key-input-wrap { position: relative; margin-bottom: 12px; }
+.key-input {
+  width: 100%; background: var(--gray1);
+  border: 2px solid var(--gray2); border-radius: 10px;
+  color: var(--text); font-family: 'Lato', sans-serif;
+  font-size: 13px; padding: 13px 44px 13px 14px;
+  outline: none; transition: border 0.2s; letter-spacing: 0.5px;
+}
+.key-input:focus { border-color: var(--blue); background: white; }
+.key-eye {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  font-size: 16px; color: var(--gray3); padding: 4px; line-height: 1;
+}
+.btn-key-save {
+  width: 100%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-mid));
+  color: white; font-family: 'Montserrat', sans-serif;
+  font-size: 14px; font-weight: 800; padding: 15px;
+  border: none; border-radius: 10px; cursor: pointer;
+  letter-spacing: 0.3px; transition: all 0.2s; text-transform: uppercase;
+}
+.btn-key-save:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(30,111,165,0.4); }
+.key-err {
+  background: #fff0f0; border: 1.5px solid #ffc0c0;
+  color: #c0392b; border-radius: 8px;
+  padding: 8px 12px; font-size: 12px; margin-top: 10px;
+}
+.key-hint { font-size: 11px; color: var(--gray3); margin-top: 14px; text-align: center; }
+.key-hint strong { color: var(--text2); }
+.key-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; color: var(--gray3); line-height: 1; padding: 4px;
+}
+.key-close:hover { color: var(--text); }
+/* CAMBIAR CLAVE BUTTON (header) */
+.btn-change-key {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.85);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px; font-weight: 600;
+  padding: 6px 12px; border-radius: 20px;
+  cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.3px; white-space: nowrap;
+}
+.btn-change-key:hover { background: rgba(255,255,255,0.2); color: white; }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- OVERLAY API KEY -->
+<div id="overlayApiKey" class="overlay-key">
+  <div class="key-card">
+    <button class="key-close hidden" id="keyClose" onclick="hideKeyOverlay()" title="Cancelar">✕</button>
+    <div class="key-logo-wrap">
+      <div class="key-logo-icon">🌊</div>
+      <div class="key-app-name">NAWi <span>Piscinas</span></div>
+      <div class="key-app-sub">Fotomontaje IA</div>
+    </div>
+    <div class="key-title">Ingresá tu API Key de OpenAI</div>
+    <div class="key-sub">Para generar fotomontajes necesitás una API Key de OpenAI. Se guarda en este navegador y no se comparte con nadie.</div>
+    <div class="key-input-wrap">
+      <input type="password" class="key-input" id="keyInput" placeholder="sk-proj-..." autocomplete="off"
+             onkeydown="if(event.key==='Enter') saveKey()">
+      <button class="key-eye" id="keyEye" onclick="toggleKeyVisibility()" tabindex="-1">👁</button>
+    </div>
+    <button class="btn-key-save" onclick="saveKey()">Guardar y continuar →</button>
+    <div class="key-err hidden" id="keyErr"></div>
+    <div class="key-hint">Obtené tu clave en <strong>platform.openai.com</strong></div>
+  </div>
+</div>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">🌊</div>
+    <div class="logo-text">NAWi <span>Piscinas</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn-change-key hidden" id="btnCambiarClave" onclick="showKeyOverlay(true)">🔑 Cambiar clave</button>
+    <div class="badge-ia">Fotomontaje IA</div>
+  </div>
+</header>
+
+<div class="hero-strip">
+  <div class="hero-title">Visualizá tu piscina en tu terreno</div>
+  <div class="hero-sub">Subí una foto y la IA genera el fotomontaje profesional en segundos</div>
+</div>
+
+<div class="steps-wrap" id="stepsWrap">
+  <div class="step-item">
+    <div class="step-num active" id="sn1">1</div>
+    <div class="step-txt active" id="st1">Configurar</div>
+  </div>
+  <div class="step-line" id="sl1"></div>
+  <div class="step-item">
+    <div class="step-num" id="sn2">2</div>
+    <div class="step-txt" id="st2">Generar</div>
+  </div>
+  <div class="step-line" id="sl2"></div>
+  <div class="step-item">
+    <div class="step-num" id="sn3">3</div>
+    <div class="step-txt" id="st3">Resultado</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- PANEL CONFIG -->
+  <div id="panelConfig">
+
+    <!-- 1. FOTO -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-icon">📸</div>
+        <div class="card-head-title">1 · Foto del Terreno</div>
+      </div>
+      <div class="card-body">
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon-wrap">📷</div>
+          <div class="upload-title">Tocá para subir la foto</div>
+          <div class="upload-sub">JPG o PNG · Foto del lugar donde irá la piscina</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+      </div>
+    </div>
+
+    <!-- 2. MODELO -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-icon">🏊</div>
+        <div class="card-head-title">2 · Modelo y Color</div>
+      </div>
+      <div class="card-body">
+
+        <!-- Tabs líneas -->
+        <label class="field-label">Línea</label>
+        <div class="linea-tabs" id="lineaTabs">
+          <button class="ltab active" data-linea="SUNDECK" onclick="selectLinea(this)">SUNDECK</button>
+          <button class="ltab" data-linea="BOREAL" onclick="selectLinea(this)">BOREAL</button>
+          <button class="ltab" data-linea="MIRAGE" onclick="selectLinea(this)">MIRAGE</button>
+          <button class="ltab" data-linea="ELITE" onclick="selectLinea(this)">ELITE</button>
+        </div>
+
+        <!-- Cards de modelos -->
+        <div class="modelo-grid" id="modeloGrid"></div>
+
+        <!-- Info del modelo seleccionado -->
+        <div class="modelo-info-box" id="modeloInfoBox"></div>
+
+        <!-- Color de piscina -->
+        <label class="field-label" style="margin-top:16px">Color de la Piscina</label>
+        <div class="color-pills" id="colorPills"></div>
+
+      </div>
+    </div>
+
+    <!-- 3. ORIENTACIÓN -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-icon">🧭</div>
+        <div class="card-head-title">3 · Orientación en el Terreno</div>
+      </div>
+      <div class="card-body">
+        <div class="orient-grid">
+          <label class="orient-card sel" id="ocH">
+            <input type="radio" name="orient" value="horizontal" checked>
+            <svg class="orient-svg" viewBox="0 0 72 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="16" width="60" height="20" rx="6" fill="#e0f5fb" stroke="#1e6fa5" stroke-width="2"/>
+              <line x1="1" y1="26" x2="6" y2="26" stroke="#00aacc" stroke-width="2"/>
+              <polyline points="4,22 0,26 4,30" fill="none" stroke="#00aacc" stroke-width="2" stroke-linecap="round"/>
+              <line x1="66" y1="26" x2="71" y2="26" stroke="#00aacc" stroke-width="2"/>
+              <polyline points="68,22 72,26 68,30" fill="none" stroke="#00aacc" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="36" cy="26" r="4" fill="#1e6fa5" opacity="0.35"/>
+            </svg>
+            <div class="orient-lbl">Horizontal</div>
+          </label>
+          <label class="orient-card" id="ocV">
+            <input type="radio" name="orient" value="vertical">
+            <svg class="orient-svg" viewBox="0 0 72 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="26" y="4" width="20" height="44" rx="6" fill="#e0f5fb" stroke="#1e6fa5" stroke-width="2"/>
+              <line x1="36" y1="49" x2="36" y2="52" stroke="#00aacc" stroke-width="2"/>
+              <polyline points="32,49 36,53 40,49" fill="none" stroke="#00aacc" stroke-width="2" stroke-linecap="round"/>
+              <line x1="36" y1="3" x2="36" y2="0" stroke="#00aacc" stroke-width="2"/>
+              <polyline points="32,3 36,-1 40,3" fill="none" stroke="#00aacc" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="36" cy="26" r="4" fill="#1e6fa5" opacity="0.35"/>
+            </svg>
+            <div class="orient-lbl">Vertical</div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-gen" id="btnGen" onclick="generate()">
+      ✦ Generar Fotomontaje
+    </button>
+    <div class="err-box hidden" id="errMain"></div>
+
+  </div><!-- /panelConfig -->
+
+  <!-- PANEL LOADING -->
+  <div id="panelLoad" class="hidden">
+    <div class="load-card">
+      <div class="wave-wrap">
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+        <div class="wave-bar"></div>
+      </div>
+      <div class="load-title">Generando tu fotomontaje</div>
+      <div class="load-sub">La IA está integrando la piscina en tu terreno.<br>Esto puede tomar 1–2 minutos.</div>
+      <div class="prog-list">
+        <div class="prog-item" id="pi0">
+          <div class="prog-dot" id="pd0">⚙</div>
+          <div>
+            <div class="prog-name">Preparando configuración</div>
+            <div class="prog-desc">Modelo, dimensiones y color seleccionados</div>
+          </div>
+        </div>
+        <div class="prog-item" id="pi1">
+          <div class="prog-dot" id="pd1">1</div>
+          <div>
+            <div class="prog-name">Versión Básica</div>
+            <div class="prog-desc">Terminación clásica · Luz de tarde 6 PM · 4K</div>
+          </div>
+        </div>
+        <div class="prog-item" id="pi2">
+          <div class="prog-dot" id="pd2">2</div>
+          <div>
+            <div class="prog-name">Versión Full Experience</div>
+            <div class="prog-desc">Solarium · Luces RGB turquesa · Atardecer · 4K</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL RESULTS -->
+  <div id="panelRes" class="hidden">
+    <div class="res-header">
+      <div class="res-title">Tu piscina NAWi visualizada</div>
+      <div class="res-sub" id="resSub"></div>
+    </div>
+    <div id="resCards"></div>
+    <button class="btn-new" onclick="resetApp()">← Nuevo Fotomontaje</button>
+  </div>
+
+</main>
+
+<footer>
+  NAWi Piscinas · Fotomontaje IA · Uso interno equipo de ventas
+</footer>
+
+<script>
+// ─── API KEY ──────────────────────────────────────────────────────────────────
+var OPENAI_KEY = ''
+// ─── DATOS REALES NAWI ────────────────────────────────────────────────────────
+var MODELOS = {
+  'SUNDECK': [
+    { id:'SD400', label:'SUNDECK 400', dim:'4m × 2,20m', prof:'1,30m', cap:'7.000 Lts', extra:'Solarium 90cm' },
+    { id:'SD500', label:'SUNDECK 500', dim:'5m × 2,45m', prof:'1,30m', cap:'9.000 Lts', extra:'Solarium 1,10m' },
+    { id:'SD600', label:'SUNDECK 600', dim:'6m × 2,80m', prof:'1,40m', cap:'14.000 Lts', extra:'Solarium 1,10m' },
+    { id:'SD700', label:'SUNDECK 700', dim:'7m × 3m',    prof:'1,40m', cap:'20.000 Lts', extra:'Solarium 1,10m' },
+    { id:'SD750', label:'SUNDECK 750', dim:'7,5m × 3,5m',prof:'1,40m', cap:'22.000 Lts', extra:'Solarium 1,10m' },
+  ],
+  'BOREAL': [
+    { id:'BOR400', label:'BOREAL 400', dim:'4m × 2,40m', prof:'1,30m', cap:'9.000 Lts',  extra:'Banco 42cm · Escaleras diagonales' },
+    { id:'BOR500', label:'BOREAL 500', dim:'5m × 2,40m', prof:'1,30m', cap:'12.000 Lts', extra:'Banco 42cm · Escaleras diagonales' },
+    { id:'BOR600', label:'BOREAL 600', dim:'6m × 2,40m', prof:'1,30m', cap:'15.000 Lts', extra:'Banco 42cm · Escaleras diagonales' },
+  ],
+  'MIRAGE': [
+    { id:'MIR600', label:'MIRAGE 600', dim:'6m × 2,80m', prof:'1,40m', cap:'13.000 Lts', extra:'Solarium 1,10m · Escalera completa' },
+    { id:'MIR700', label:'MIRAGE 700', dim:'7m × 3m',    prof:'1,40m', cap:'19.000 Lts', extra:'Solarium 1,10m · Escalera completa' },
+    { id:'MIR800', label:'MIRAGE 800', dim:'8m × 3,25m', prof:'1,40m', cap:'25.000 Lts', extra:'Solarium 1,10m · Escalera completa' },
+  ],
+  'ELITE': [
+    { id:'ELT260', label:'ELITE 260', dim:'2,60m × 2,05m', prof:'70cm', cap:'1.100 Lts', extra:'Sin obra · Autoportante · Banco' },
+    { id:'ELT340', label:'ELITE 340', dim:'3,40m × 2,05m', prof:'70cm', cap:'2.000 Lts', extra:'Sin obra · Autoportante · Banco' },
+    { id:'ELT420', label:'ELITE 420', dim:'4,20m × 2,05m', prof:'70cm', cap:'3.000 Lts', extra:'Sin obra · 2 bancos' },
+  ]
+};
+
+// Colores por linea
+var COLORES = {
+  'SUNDECK': [
+    { id:'celeste', label:'Celeste', hex:'#87ceeb', agua:'Celeste turquesa' },
+    { id:'beige',   label:'Beige',   hex:'#d4b896', agua:'Turquesa cristalino' },
+  ],
+  'BOREAL': [
+    { id:'celeste', label:'Celeste', hex:'#87ceeb', agua:'Celeste turquesa' },
+    { id:'beige',   label:'Beige',   hex:'#d4b896', agua:'Turquesa cristalino' },
+  ],
+  'MIRAGE': [
+    { id:'celeste', label:'Celeste', hex:'#87ceeb', agua:'Celeste turquesa' },
+    { id:'beige',   label:'Beige',   hex:'#d4b896', agua:'Turquesa cristalino' },
+  ],
+  'ELITE': [
+    { id:'blanco',  label:'Blanco',  hex:'#f0f4f7', agua:'Turquesa cristalino' },
+    { id:'beige',   label:'Beige',   hex:'#d4b896', agua:'Turquesa cristalino' },
+    { id:'gris',    label:'Gris',    hex:'#9fb3c0', agua:'Turquesa cristalino' },
+  ]
+};
+
+var ST = { b64:null, mime:null, colorPiscina:'celeste', colorLabel:'Celeste', colorAgua:'Celeste turquesa', orient:'horizontal', lineaActual:'SUNDECK', modeloActual:null };
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var savedKey = localStorage.getItem('nawi_openai_key');
+  if (savedKey) {
+    OPENAI_KEY = savedKey;
+    document.getElementById('overlayApiKey').classList.add('hidden');
+    document.getElementById('btnCambiarClave').classList.remove('hidden');
+  }
+
+  document.getElementById('ocH').addEventListener('click', function(){
+    document.getElementById('ocH').classList.add('sel');
+    document.getElementById('ocV').classList.remove('sel');
+    ST.orient = 'horizontal';
+  });
+  document.getElementById('ocV').addEventListener('click', function(){
+    document.getElementById('ocV').classList.add('sel');
+    document.getElementById('ocH').classList.remove('sel');
+    ST.orient = 'vertical';
+  });
+
+  selectLinea(document.querySelector('.ltab.active'));
+});
+
+// ─── API KEY MANAGEMENT ───────────────────────────────────────────────────────
+function showKeyOverlay(isChange) {
+  var overlay = document.getElementById('overlayApiKey');
+  var closeBtn = document.getElementById('keyClose');
+  var input = document.getElementById('keyInput');
+  overlay.classList.remove('hidden');
+  if (isChange) {
+    closeBtn.classList.remove('hidden');
+    input.value = '';
+  } else {
+    closeBtn.classList.add('hidden');
+    input.value = '';
+  }
+  document.getElementById('keyErr').classList.add('hidden');
+  input.type = 'password';
+  document.getElementById('keyEye').textContent = '👁';
+  input.focus();
+}
+
+function hideKeyOverlay() {
+  document.getElementById('overlayApiKey').classList.add('hidden');
+}
+
+function saveKey() {
+  var val = document.getElementById('keyInput').value.trim();
+  var errEl = document.getElementById('keyErr');
+  if (!val) {
+    errEl.textContent = 'Por favor ingresá tu API Key de OpenAI.';
+    errEl.classList.remove('hidden'); return;
+  }
+  if (!val.startsWith('sk-')) {
+    errEl.textContent = 'La clave debe comenzar con "sk-". Verificá que sea correcta.';
+    errEl.classList.remove('hidden'); return;
+  }
+  OPENAI_KEY = val;
+  localStorage.setItem('nawi_openai_key', val);
+  document.getElementById('overlayApiKey').classList.add('hidden');
+  document.getElementById('btnCambiarClave').classList.remove('hidden');
+  errEl.classList.add('hidden');
+}
+
+function toggleKeyVisibility() {
+  var input = document.getElementById('keyInput');
+  var eye = document.getElementById('keyEye');
+  if (input.type === 'password') {
+    input.type = 'text';
+    eye.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    eye.textContent = '👁';
+  }
+}
+
+function selectLinea(btn) {
+  document.querySelectorAll('.ltab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  ST.lineaActual = btn.dataset.linea;
+  renderModelos();
+  renderColores();
+}
+
+function renderModelos() {
+  var linea = ST.lineaActual;
+  var lista = MODELOS[linea] || [];
+  var grid = document.getElementById('modeloGrid');
+  grid.innerHTML = '';
+  lista.forEach(function(m, i) {
+    var isFirst = (i === 0 && !ST.modeloActual) || (ST.modeloActual && ST.modeloActual.id === m.id);
+    var card = document.createElement('div');
+    card.className = 'mc' + (isFirst ? ' sel' : '');
+    card.dataset.id = m.id;
+    card.innerHTML = '<div class="mc-label">'+m.label+'</div><div class="mc-dim">'+m.dim+'</div>';
+    card.onclick = function(){
+      document.querySelectorAll('.mc').forEach(function(c){ c.classList.remove('sel'); });
+      card.classList.add('sel');
+      ST.modeloActual = m;
+      renderModeloInfo(m);
+    };
+    grid.appendChild(card);
+    if (isFirst) { ST.modeloActual = m; }
+  });
+  renderModeloInfo(ST.modeloActual || lista[0]);
+}
+
+function renderModeloInfo(m) {
+  if (!m) return;
+  ST.modeloActual = m;
+  var box = document.getElementById('modeloInfoBox');
+  box.innerHTML =
+    '<div class="mi-row"><span class="mi-k">Dimensiones</span><span class="mi-v">'+m.dim+'</span></div>'+
+    '<div class="mi-row"><span class="mi-k">Profundidad</span><span class="mi-v">'+m.prof+'</span></div>'+
+    '<div class="mi-row"><span class="mi-k">Capacidad</span><span class="mi-v">'+m.cap+'</span></div>'+
+    '<div class="mi-row"><span class="mi-k">Característica</span><span class="mi-v">'+m.extra+'</span></div>';
+}
+
+function renderColores() {
+  var linea = ST.lineaActual;
+  var cols = COLORES[linea] || [];
+  var wrap = document.getElementById('colorPills');
+  wrap.innerHTML = '';
+  cols.forEach(function(c, i) {
+    var btn = document.createElement('button');
+    btn.className = 'cpill' + (i===0 ? ' sel' : '');
+    btn.dataset.id = c.id;
+    btn.innerHTML = '<span class="cpill-dot" style="background:'+c.hex+'"></span>'+c.label;
+    btn.onclick = function(){
+      document.querySelectorAll('.cpill').forEach(function(b){ b.classList.remove('sel'); });
+      btn.classList.add('sel');
+      ST.colorPiscina = c.id;
+      ST.colorLabel = c.label;
+      ST.colorAgua = c.agua;
+    };
+    wrap.appendChild(btn);
+    if (i===0) { ST.colorPiscina=c.id; ST.colorLabel=c.label; ST.colorAgua=c.agua; }
+  });
+}
+
+function getModeloActual() { return ST.modeloActual; }
+
+// ─── FILE ─────────────────────────────────────────────────────────────────────
+function handleFile(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var dataUrl = ev.target.result;
+    ST.mime = file.type || 'image/jpeg';
+    ST.b64 = dataUrl.split(',')[1];
+    var zone = document.getElementById('uploadZone');
+    zone.classList.add('has-img');
+    zone.innerHTML = '<img src="'+dataUrl+'" alt="Terreno"><div class="change-btn">📷 Cambiar</div>';
+    zone.onclick = function(){ document.getElementById('fileInput').click(); };
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── PROGRESS ─────────────────────────────────────────────────────────────────
+function setPI(idx, state) {
+  var item = document.getElementById('pi'+idx);
+  var dot  = document.getElementById('pd'+idx);
+  item.className = 'prog-item ' + state;
+  dot.className  = 'prog-dot ' + state;
+  if (state === 'done') dot.textContent = '✓';
+}
+
+// ─── GENERATE ─────────────────────────────────────────────────────────────────
+async function generate() {
+  var errEl = document.getElementById('errMain');
+  errEl.classList.add('hidden');
+  if (!ST.b64) {
+    errEl.textContent = '📷 Por favor subí una foto del terreno antes de continuar.';
+    errEl.classList.remove('hidden'); return;
+  }
+  if (!OPENAI_KEY) {
+    errEl.textContent = '🔑 Configurá tu API Key usando el botón "Cambiar clave" en el encabezado.';
+    errEl.classList.remove('hidden'); return;
+  }
+
+  var linea   = ST.lineaActual;
+  var modelo  = getModeloActual();
+  var colorInt= ST.colorLabel;
+  var colorAgua = ST.colorAgua;
+  var orientTxt = ST.orient === 'horizontal'
+    ? 'orientada horizontalmente (el eje largo va de izquierda a derecha en la imagen)'
+    : 'orientada verticalmente (el eje largo va de adelante hacia atrás, en profundidad)';
+
+  // Steps update
+  document.getElementById('sn1').className='step-num done'; document.getElementById('sn1').textContent='✓';
+  document.getElementById('sl1').className='step-line done';
+  document.getElementById('sn2').className='step-num active';
+  document.getElementById('st2').className='step-txt active';
+
+  document.getElementById('panelConfig').classList.add('hidden');
+  document.getElementById('panelLoad').classList.remove('hidden');
+
+  setPI(0,'active'); await wait(700); setPI(0,'done');
+
+  var base = [
+    'Piscina de fibra de vidrio NAWi Piscinas, fabricada en PRFV de alta calidad.',
+    'Línea '+linea+', modelo '+modelo.label+'.',
+    'Dimensiones: '+modelo.dim+'.', 
+    'Profundidad: '+modelo.prof+'.',
+    'Color interior de la fibra de vidrio: '+colorInt+'.',
+    modelo.extra+'.',
+    'Color del agua: '+colorAgua+'.',
+    'Posición en el terreno: '+orientTxt+'.',
+  ].join(' ');
+
+  var results = [];
+
+  // VERSION 1 — BÁSICA
+  setPI(1,'active');
+  var p1 = [
+    'Fotomontaje hiperrealista 4K. Integrar digitalmente una piscina de fibra de vidrio en el terreno de la foto adjunta.',
+    base,
+    'VERSIÓN BÁSICA — ESPECIFICACIONES:',
+    '- Terminación exterior: exactamente UNA vuelta de losetas cerámicas atérmicas blancas bordeando el perímetro completo de la piscina al ras del suelo.',
+    '- Hora: 18:00 hs, luz dorada de tarde, cielo cálido con tonos anaranjados suaves en el horizonte.',
+    '- El agua se ve cristalina con reflejos dorados del sol de tarde.',
+    '- El entorno inmediato está mejorado: césped prolijo y verde, zona limpia y ordenada.',
+    '- Plantas decorativas discretas alrededor si hay espacio: palmeras bajas, agapantos, o gramíneas ornamentales.',
+    '- Calidad fotográfica 4K ultra nítida, iluminación natural perfecta, como foto de revista de arquitectura.',
+    'REGLAS TÉCNICAS CRÍTICAS:',
+    '- Mantener EXACTAMENTE el ángulo de cámara y perspectiva de la foto original sin ningún cambio.',
+    '- La piscina integrada debe verse 100% fotorrealista, nunca un render 3D ni ilustración.',
+    '- Las sombras deben ser coherentes con la luz de las 18 hs.',
+    '- No agregar elementos que no correspondan a una piscina terminada.',
+  ].join(' ');
+
+  try {
+    var u1 = await callOpenAI(p1);
+    results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'Una vuelta de losetas · Luz de tarde 6 PM · Foto profesional 4K', url:u1, err:null });
+  } catch(e) {
+    results.push({ badge:'basic', label:'Versión Básica', name:'Terminación Clásica', desc:'', url:null, err:e.message });
+  }
+  setPI(1,'done');
+  await wait(2000);
+
+  // VERSION 2 — FULL EXPERIENCE
+  setPI(2,'active');
+  var p2 = [
+    'Fotomontaje hiperrealista 4K de máxima calidad. Integrar digitalmente una piscina de fibra de vidrio con terminaciones premium en el terreno de la foto adjunta.',
+    base,
+    'VERSIÓN FULL EXPERIENCE — ESPECIFICACIONES:',
+    '- Terminación exterior: DOS vueltas de losetas cerámicas premium alrededor de todo el perímetro de la piscina.',
+    '- Solarium: plataforma al ras del suelo hecha de losetas cerámicas, de 2 metros de largo, ubicada en la puntera de la piscina (el extremo por donde se ingresa al agua). Es amplia, prolija y está bien integrada al terreno.',
+    '- Iluminación subacuática: EXACTAMENTE DOS luces LED RGB instaladas en la pared lateral de la piscina (elegir el lado más natural según la perspectiva de la foto). Las luces emiten un haz de luz turquesa brillante que se refleja y se ve en el agua cristalina.',
+    '- Hora: atardecer 19:15 hs, cielo con degradado de naranja y rosa en el horizonte, tonos mágicos y cálidos.',
+    '- El agua refleja simultáneamente el atardecer naranja en la superficie y la luz turquesa de las luces en el interior.',
+    '- Decoración: plantas ornamentales premium (palmeras pequeñas, agapantos en flor, iluminación de jardín LED ambiental, macetas de diseño moderno). El espacio luce como villa de lujo o hotel boutique de 5 estrellas.',
+    '- Calidad fotográfica 4K ultra nítida, composición de portada de revista de arquitectura premium.',
+    'REGLAS TÉCNICAS CRÍTICAS:',
+    '- Mantener EXACTAMENTE el ángulo de cámara y perspectiva de la foto original.',
+    '- Todo debe verse 100% fotorrealista.',
+    '- Las sombras y reflexiones deben ser coherentes con el atardecer y las luces RGB.',
+    '- Las DOS luces deben verse claramente encendidas con brillo turquesa en el agua.',
+  ].join(' ');
+
+  try {
+    var u2 = await callOpenAI(p2);
+    results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'Doble loseta · Solarium 2m · Luces RGB turquesa · Atardecer · 4K', url:u2, err:null });
+  } catch(e) {
+    results.push({ badge:'full', label:'Full Experience', name:'Premium con Solarium', desc:'', url:null, err:e.message });
+  }
+  setPI(2,'done');
+
+  showResults(results, linea, modelo);
+}
+
+// ─── OPENAI ───────────────────────────────────────────────────────────────────
+async function callOpenAI(prompt) {
+  var byteStr = atob(ST.b64);
+  var ab = new ArrayBuffer(byteStr.length);
+  var ia = new Uint8Array(ab);
+  for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+  var blob = new Blob([ab], { type: ST.mime });
+
+  var fd = new FormData();
+  fd.append('model', 'gpt-image-1');
+  fd.append('prompt', prompt);
+  fd.append('n', '1');
+  fd.append('size', '1024x1024');
+  fd.append('quality', 'high');
+  fd.append('image[]', blob, 'terreno.jpg');
+
+  var res = await fetch('https://api.openai.com/v1/images/edits', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + OPENAI_KEY },
+    body: fd
+  });
+
+  if (!res.ok) {
+    var e = {};
+    try { e = await res.json(); } catch(ex){}
+    var msg = (e.error && e.error.message) ? e.error.message : 'Error HTTP '+res.status;
+    if (res.status===401) throw new Error('API Key inválida. Verificá que sea correcta en platform.openai.com');
+    if (res.status===429) throw new Error('Límite de requests alcanzado. Esperá unos segundos e intentá de nuevo.');
+    if (res.status===400) throw new Error('Error en la solicitud: '+msg);
+    throw new Error(msg);
+  }
+
+  var data = await res.json();
+  if (data.data && data.data[0]) {
+    if (data.data[0].url) return data.data[0].url;
+    if (data.data[0].b64_json) return 'data:image/png;base64,'+data.data[0].b64_json;
+  }
+  throw new Error('No se recibió imagen en la respuesta de OpenAI.');
+}
+
+// ─── SHOW RESULTS ─────────────────────────────────────────────────────────────
+function showResults(results, linea, modelo) {
+  document.getElementById('panelLoad').classList.add('hidden');
+  document.getElementById('panelRes').classList.remove('hidden');
+  document.getElementById('resSub').textContent = 'Línea '+linea+' · '+modelo.label+' · '+modelo.dim;
+
+  // Steps
+  document.getElementById('sn2').className='step-num done'; document.getElementById('sn2').textContent='✓';
+  document.getElementById('sl2').className='step-line done';
+  document.getElementById('sn3').className='step-num active';
+  document.getElementById('st3').className='step-txt active';
+
+  window._nawiRes = results;
+  var c = document.getElementById('resCards');
+  c.innerHTML = '';
+
+  results.forEach(function(r, i){
+    var imgHtml = r.url
+      ? '<img class="res-img" src="'+r.url+'" alt="'+r.label+'">'
+      : '<div class="res-err">❌ No se pudo generar esta versión.<br><small>'+(r.err||'')+'</small></div>';
+    var acts = r.url
+      ? '<div class="res-actions"><button class="btn-dl" onclick="dlImg('+i+')">⬇ Descargar</button><button class="btn-share" onclick="shareImg('+i+')">📤</button></div>'
+      : '';
+    c.innerHTML += '<div class="res-card">'
+      +'<div class="res-top"><span class="res-badge badge-'+r.badge+'">'+r.label+'</span><span class="res-name">'+r.name+'</span></div>'
+      +'<div class="res-desc">'+r.desc+'</div>'
+      +imgHtml+acts+'</div>';
+  });
+}
+
+// ─── DOWNLOAD / SHARE ─────────────────────────────────────────────────────────
+function dlImg(i) {
+  var r = window._nawiRes[i]; if (!r||!r.url) return;
+  var a = document.createElement('a');
+  a.href = r.url;
+  a.download = 'nawi_'+r.label.toLowerCase().replace(/\s+/g,'_')+'.jpg';
+  a.click();
+}
+function shareImg(i) {
+  var r = window._nawiRes[i]; if (!r||!r.url) return;
+  if (navigator.share) { navigator.share({ title:'NAWi Piscinas — Fotomontaje', url:r.url }); }
+  else { navigator.clipboard.writeText(r.url).then(function(){ alert('Link copiado'); }); }
+}
+
+// ─── RESET ────────────────────────────────────────────────────────────────────
+function resetApp() {
+  ST.b64=null; ST.mime=null;
+  document.getElementById('panelRes').classList.add('hidden');
+  document.getElementById('panelConfig').classList.remove('hidden');
+  var z = document.getElementById('uploadZone');
+  z.classList.remove('has-img');
+  z.innerHTML='<div class="upload-icon-wrap">📷</div><div class="upload-title">Tocá para subir la foto</div><div class="upload-sub">JPG o PNG · Foto del lugar donde irá la piscina</div>';
+  z.onclick=function(){ document.getElementById('fileInput').click(); };
+  document.getElementById('fileInput').value='';
+  selectLinea(document.querySelector('.ltab'));  
+  document.getElementById('errMain').classList.add('hidden');
+  // Steps reset
+  document.getElementById('sn1').className='step-num active'; document.getElementById('sn1').textContent='1';
+  document.getElementById('sn2').className='step-num'; document.getElementById('sn2').textContent='2';
+  document.getElementById('sn3').className='step-num'; document.getElementById('sn3').textContent='3';
+  document.getElementById('st1').className='step-txt active';
+  document.getElementById('st2').className='step-txt';
+  document.getElementById('st3').className='step-txt';
+  document.getElementById('sl1').className='step-line';
+  document.getElementById('sl2').className='step-line';
+  ['pi0','pi1','pi2'].forEach(function(id){
+    document.getElementById(id).className='prog-item';
+  });
+  document.getElementById('pd0').className='prog-dot'; document.getElementById('pd0').textContent='⚙';
+  document.getElementById('pd1').className='prog-dot'; document.getElementById('pd1').textContent='1';
+  document.getElementById('pd2').className='prog-dot'; document.getElementById('pd2').textContent='2';
+}
+
+function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+</script>
+</body>
+</html>
