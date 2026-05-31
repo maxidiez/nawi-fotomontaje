@@ -1,4 +1,6 @@
-  export default async function handler(req, res) {
+import { deflateSync } from 'zlib';
+
+export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { prompt, imageBase64, mimeType } = req.body;
@@ -7,7 +9,9 @@
   if (!token) return res.status(500).json({ error: 'Missing API token' });
 
   try {
-    const response = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-1.1-pro/predictions', {
+    const maskBase64 = generateWhitePNG(1024, 1024);
+
+    const response = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-fill-pro/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -18,9 +22,9 @@
         input: {
           prompt: prompt,
           image: `data:${mimeType};base64,${imageBase64}`,
-          prompt_strength: 0.82,
-          num_inference_steps: 35,
-          guidance_scale: 3.5
+          mask: `data:image/png;base64,${maskBase64}`,
+          num_inference_steps: 50,
+          guidance_scale: 30
         }
       })
     });
@@ -55,6 +59,56 @@
   } catch(e) {
     return res.status(500).json({ error: e.message });
   }
+}
+
+// Genera un PNG blanco sólido de width×height sin dependencias externas
+function generateWhitePNG(width, height) {
+  // Tabla CRC32
+  const crcTable = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    crcTable[n] = c;
+  }
+  function crc32(buf) {
+    let c = 0xFFFFFFFF;
+    for (const b of buf) c = crcTable[(c ^ b) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function makeChunk(type, data) {
+    const t = Buffer.from(type, 'ascii');
+    const d = Buffer.isBuffer(data) ? data : Buffer.from(data);
+    const crcVal = crc32(Buffer.concat([t, d]));
+    const out = Buffer.alloc(4 + 4 + d.length + 4);
+    out.writeUInt32BE(d.length, 0);
+    t.copy(out, 4);
+    d.copy(out, 8);
+    out.writeUInt32BE(crcVal, 8 + d.length);
+    return out;
+  }
+
+  // IHDR: grayscale, 8 bits
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;  // bit depth
+  ihdr[9] = 0;  // color type: grayscale
+  // compression, filter, interlace = 0
+
+  // Datos crudos: cada fila = byte de filtro (0) + width bytes 0xFF (blanco)
+  const rowLen = 1 + width;
+  const raw = Buffer.alloc(rowLen * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * rowLen] = 0;                                        // filtro: None
+    raw.fill(0xFF, y * rowLen + 1, (y + 1) * rowLen);          // pixels blancos
+  }
+
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]), // firma PNG
+    makeChunk('IHDR', ihdr),
+    makeChunk('IDAT', deflateSync(raw)),                             // zlib es el formato correcto para IDAT
+    makeChunk('IEND', Buffer.alloc(0))
+  ]).toString('base64');
 }
 
 function extractUrl(output) {
